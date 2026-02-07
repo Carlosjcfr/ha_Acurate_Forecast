@@ -1,4 +1,4 @@
-# ☀️ Accurate Forecast for Home Assistant
+# ☀️ Accurate Solar Forecast for Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 [![Maintainer](https://img.shields.io/badge/maintainer-%40tu_usuario-blue)](https://github.com/tu_usuario)
@@ -101,5 +101,6 @@ El componente realiza los siguientes cálculos en cada actualización:
 ---
 
 ## 📄 Licencia
-PolyForm Strict License 1.0.0 -> 
-https://polyformproject.org/licenses/strict/1.0.0
+
+PolyForm Strict License 1.0.0 ->
+<https://polyformproject.org/licenses/strict/1.0.0>

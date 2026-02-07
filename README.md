@@ -73,18 +73,24 @@ Ve a **Ajustes** > **Dispositivos y Servicios** > **Añadir Integración** > **A
 Selecciona la opción **"Añadir Nuevo Modelo de Panel"**. Necesitarás la ficha técnica de tu placa:
 
 * **Nombre:** (Ej: `Longi 450W Hi-MO`)
+* **Marca:** (Ej: `Longi`, `Jinko`, `Canadian Solar`...)
 * **P_stc:** Potencia Pico (W)
 * **Gamma:** Coeficiente de Temperatura (%/°C)
 * **NOCT:** Temperatura de operación nominal.
+* **Voc:** Voltaje de Circuito Abierto (V)
+* **Isc:** Corriente de Cortocircuito (A)
+* **Vmp:** Voltaje a Máxima Potencia (V)
+* **Imp:** Corriente a Máxima Potencia (A)
 
 ### Paso 2: Crear un String
 
 Selecciona **"Configurar Nuevo String"**:
 
-1. Elige el modelo de panel (desde tu base de datos).
-2. Introduce el número de paneles.
-3. Define la orientación (Azimut) e inclinación del string.
-4. Selecciona tu **sensor de irradiancia de referencia** y define cómo está instalado (plano, inclinado, etc.).
+1. **Selecciona la marca** del panel.
+2. **Elige el modelo** específico (filtrado por la marca seleccionada).
+3. Introduce el número de paneles.
+4. Define la orientación (Azimut) e inclinación del string.
+5. Selecciona tu **sensor de irradiancia de referencia** y define cómo está instalado (plano, inclinado, etc.).
 
 ---
 

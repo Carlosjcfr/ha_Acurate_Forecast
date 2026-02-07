@@ -18,6 +18,7 @@ CONF_WIND_SENSOR = "wind_sensor"
 
 # PV Model Parameters
 CONF_P_STC = "p_stc"
+CONF_BRAND = "brand"
 CONF_VOC = "voc"
 CONF_ISC = "isc"
 CONF_VMP = "vmp"

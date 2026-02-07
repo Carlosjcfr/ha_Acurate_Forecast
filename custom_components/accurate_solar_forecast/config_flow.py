@@ -35,6 +35,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Guardar en la DB
             await self._db.add_model(
                 user_input["name"],
+                user_input[CONF_BRAND],
                 user_input["p_stc"],
                 user_input["gamma"],
                 user_input["noct"],
@@ -48,6 +49,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema = vol.Schema({
             vol.Required("name"): str,
+            vol.Required(CONF_BRAND): str,
             vol.Required("p_stc", default=400): vol.Coerce(float),
             vol.Required("gamma", default=-0.35): vol.Coerce(float), # %/C
             vol.Required("noct", default=45): vol.Coerce(float),

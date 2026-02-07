@@ -9,6 +9,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         self._db = None
+        self.selected_brand = None
 
     async def async_step_user(self, user_input=None):
         """Menú Principal: ¿Qué quieres hacer?"""
@@ -45,11 +46,21 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_IMP]
             )
             # Volver al menú o cerrar
-            return self.async_create_entry(title="Modelo Guardado", data={})
+            return self.async_create_entry(title=user_input["name"], data={})
+
+        # Get existing brands to populate the list
+        brands_list = self._db.list_brands()
 
         schema = vol.Schema({
             vol.Required("name"): str,
-            vol.Required(CONF_BRAND): str,
+            # Seleccionable de Marca con opción de escribir nueva
+            vol.Required(CONF_BRAND): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=brands_list, 
+                    custom_value=True, 
+                    mode="dropdown"
+                )
+            ),
             vol.Required("p_stc", default=400): vol.Coerce(float),
             vol.Required("gamma", default=-0.35): vol.Coerce(float), # %/C
             vol.Required("noct", default=45): vol.Coerce(float),
@@ -61,22 +72,40 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="add_pv_model", data_schema=schema, errors=errors)
 
-    # --- OPCIÓN B: CREAR UN STRING (SENSOR) ---
+    # --- OPCIÓN B: CREAR UN STRING (SENSOR) - PASO 1: SELECCIONAR MARCA ---
     async def async_step_add_string(self, user_input=None):
         if user_input is not None:
+            self.selected_brand = user_input[CONF_BRAND]
+            return await self.async_step_add_string_details()
+
+        brands_list = self._db.list_brands()
+        
+        schema = vol.Schema({
+            vol.Required(CONF_BRAND): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=brands_list, mode="dropdown")
+            )
+        })
+
+        return self.async_show_form(step_id="add_string", data_schema=schema)
+
+    # --- PASO 2: DETALLES DEL STRING (FILTRADO POR MARCA) ---
+    async def async_step_add_string_details(self, user_input=None):
+        if user_input is not None:
+            # Combine brand if we want to store it, though not strictly necessary for the sensor config itself 
+            # as long as we have the model ID.
             return self.async_create_entry(
                 title=user_input[CONF_STRING_NAME], 
                 data=user_input
             )
 
-        # Obtener lista de modelos de la DB para el desplegable
-        models_list = self._db.list_models()
+        # Gets models for the selected brand
+        models_filtered = self._db.list_models_by_brand(self.selected_brand)
 
         schema = vol.Schema({
             vol.Required(CONF_STRING_NAME): str,
-            # Selector de Modelo (desde nuestra DB)
+            # Selector de Modelo FILTRADO
             vol.Required(CONF_PANEL_MODEL): selector.SelectSelector(
-                selector.SelectSelectorConfig(options=list(models_list.values()), mode="dropdown")
+                selector.SelectSelectorConfig(options=list(models_filtered.values()), mode="dropdown")
             ),
             vol.Required(CONF_NUM_PANELS, default=1): int,
             
@@ -86,7 +115,10 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Datos del Sensor Fuente (Origen)
             vol.Required(CONF_REF_SENSOR): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain="sensor")
+                selector.EntitySelectorConfig(
+                    domain="sensor", 
+                    device_class=["power", "irradiance"]
+                )
             ),
             vol.Required(CONF_REF_AZIMUTH, default=180): vol.Coerce(float),
             vol.Required(CONF_REF_TILT, default=0): vol.Coerce(float), # 0 = Horizontal
@@ -96,8 +128,8 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 selector.EntitySelectorConfig(domain="sensor", device_class="temperature")
             ),
             vol.Optional(CONF_WIND_SENSOR): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain="sensor")
+                selector.EntitySelectorConfig(domain="sensor", device_class="wind_speed")
             ),
         })
 
-        return self.async_show_form(step_id="add_string", data_schema=schema)
+        return self.async_show_form(step_id="add_string_details", data_schema=schema)

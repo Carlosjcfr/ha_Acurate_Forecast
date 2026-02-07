@@ -46,13 +46,35 @@ class PVDatabase:
             "noct": noct,
             "voc": voc,
             "isc": isc,
-            "vmp": vmp,
-            "imp": imp
         }
         return self.async_save()
 
+    def delete_model(self, model_id):
+        """Elimina un modelo de la DB."""
+        if model_id in self.data:
+            del self.data[model_id]
+            return self.async_save()
+        return False
+
     def get_model(self, model_id):
         return self.data.get(model_id)
+
+    def list_brands(self):
+        """Devuelve lista de marcas únicas."""
+        brands = set()
+        for v in self.data.values():
+            brands.add(v.get("brand", "Generic"))
+        if not brands:
+            return ["Generic"]
+        return sorted(list(brands))
+
+    def list_models_by_brand(self, brand):
+        """Devuelve dict {id: nombre} filtrado por marca."""
+        return {
+            k: v["name"] 
+            for k, v in self.data.items() 
+            if v.get("brand", "Generic") == brand
+        }
 
     def list_models(self):
         """Devuelve dict {id: nombre} para el selector."""

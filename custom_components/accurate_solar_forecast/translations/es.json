@@ -24,8 +24,15 @@
                 }
             },
             "add_string": {
-                "title": "Añadir String",
-                "description": "Configura un nuevo string de paneles solares.",
+                "title": "Añadir String - Marca",
+                "description": "Paso 1: Selecciona la marca del panel.",
+                "data": {
+                    "brand": "Marca del Panel"
+                }
+            },
+            "add_string_details": {
+                "title": "Añadir String - Detalles",
+                "description": "Paso 2: Configura el modelo y la geometría.",
                 "data": {
                     "string_name": "Nombre del String",
                     "panel_model": "Modelo de Panel",

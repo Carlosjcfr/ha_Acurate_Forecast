@@ -24,8 +24,15 @@
                 }
             },
             "add_string": {
-                "title": "Add String",
-                "description": "Configure a new string of solar panels.",
+                "title": "Add String - Brand",
+                "description": "Step 1: Select Panel Brand.",
+                "data": {
+                    "brand": "Panel Brand"
+                }
+            },
+            "add_string_details": {
+                "title": "Add String - Details",
+                "description": "Step 2: Configure model and geometry.",
                 "data": {
                     "string_name": "String Name",
                     "panel_model": "Panel Model",

@@ -14,6 +14,7 @@
                 "description": "Enter the technical specifications of your PV panel.",
                 "data": {
                     "name": "Model Name",
+                    "brand": "Manufacturer",
                     "p_stc": "Power at STC (W)",
                     "gamma": "Temperature Coefficient (%/°C)",
                     "noct": "NOCT (°C)",

@@ -14,6 +14,7 @@
                 "description": "Introduce las especificaciones técnicas de tu panel fotovoltaico.",
                 "data": {
                     "name": "Nombre del Modelo",
+                    "brand": "Fabricante",
                     "p_stc": "Potencia STC (W)",
                     "gamma": "Coeficiente de Temperatura (%/°C)",
                     "noct": "NOCT (°C)",

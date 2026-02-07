@@ -18,6 +18,7 @@ class PVDatabase:
             self.data = {
                 "default_450w": {
                     "name": "Generico 450W",
+                    "brand": "Generic",
                     "p_stc": 450,
                     "gamma": -0.35,
                     "noct": 45,
@@ -35,10 +36,11 @@ class PVDatabase:
         """Guarda la DB al disco."""
         await self._store.async_save(self.data)
 
-    def add_model(self, name, p_stc, gamma, noct, voc, isc, vmp, imp):
+    def add_model(self, name, brand, p_stc, gamma, noct, voc, isc, vmp, imp):
         model_id = name.lower().replace(" ", "_")
         self.data[model_id] = {
             "name": name,
+            "brand": brand,
             "p_stc": p_stc,
             "gamma": gamma,
             "noct": noct,

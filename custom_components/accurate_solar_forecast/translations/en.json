@@ -6,52 +6,45 @@
                 "description": "What do you want to add?",
                 "menu_options": {
                     "add_pv_model": "New PV Module",
-                    "add_irradiance_sensor": "New Irradiance Sensor",
                     "add_string": "New String"
                 }
             },
             "add_pv_model": {
-                "title": "Add PV Panel Model",
+                "title": "New PV Module",
                 "description": "Enter the technical specifications of your PV panel.",
                 "data": {
-                    "name": "Model Name",
+                    "name": "Model",
                     "brand": "Manufacturer",
-                    "p_stc": "Power at STC (W)",
-                    "gamma": "Temperature Coefficient (%/°C)",
+                    "p_stc": "Power (STC)",
+                    "gamma": "Temp Coeff (%/°C)",
                     "noct": "NOCT (°C)",
-                    "voc": "Open Circuit Voltage (Voc)",
-                    "isc": "Short Circuit Current (Isc)",
-                    "vmp": "Voltage at Max Power (Vmp)",
-                    "imp": "Current at Max Power (Imp)"
-                }
-            },
-            "add_irradiance_sensor": {
-                "title": "Add Irradiance Sensor",
-                "description": "Configure an existing irradiance sensor.",
-                "data": {
-                    "name": "Name",
-                    "irradiance_sensor": "Irradiance Sensor",
-                    "temp_sensor": "Temperature Sensor",
-                    "wind_sensor": "Wind Speed Sensor"
+                    "voc": "Voc",
+                    "isc": "Isc",
+                    "vmp": "Vmp",
+                    "imp": "Imp"
                 }
             },
             "add_string": {
-                "title": "Add String - Brand",
-                "description": "Step 1: Select Panel Brand.",
+                "title": "New String",
+                "description": "Select the PV module manufacturer.",
                 "data": {
-                    "brand": "Panel Brand"
+                    "brand": "PV Module Manufacturer"
                 }
             },
             "add_string_details": {
-                "title": "Add String - Details",
-                "description": "Step 2: Configure model and geometry.",
+                "title": "New String",
+                "description": "Configure sensors and string details.",
                 "data": {
-                    "string_name": "Sensor Name",
-                    "panel_model": "Panel Model",
-                    "num_panels": "Number of Panels (Series)",
-                    "num_strings": "Number of Parallel Strings",
-                    "azimuth": "Azimut (180=South)",
-                    "tilt": "Tilt (Degrees)"
+                    "string_name": "Name",
+                    "irradiance_sensor": "Irradiance Sensor",
+                    "temp_sensor": "Ambient Temp Sensor",
+                    "temp_panel_sensor": "Panel Temp Sensor",
+                    "wind_sensor": "Wind Speed Sensor (m/s)",
+                    "panel_model": "PV Module",
+                    "num_panels": "Series Panels Count",
+                    "num_strings": "Parallel Strings Count",
+                    "tilt": "Tilt (°)",
+                    "azimuth": "Azimuth (180° = South)"
                 }
             }
         }

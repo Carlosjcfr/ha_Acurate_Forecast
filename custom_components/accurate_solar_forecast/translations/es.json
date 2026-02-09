@@ -6,52 +6,45 @@
                 "description": "¿Que quieres añadir?",
                 "menu_options": {
                     "add_pv_model": "Nuevo Modulo Fotovoltaico",
-                    "add_irradiance_sensor": "Nuevo Sensor de irradiancia",
                     "add_string": "Nuevo String"
                 }
             },
             "add_pv_model": {
-                "title": "Añadir Modelo de Panel",
+                "title": "Nuevo Módulo FV",
                 "description": "Introduce las especificaciones técnicas de tu panel fotovoltaico.",
                 "data": {
-                    "name": "Nombre del Modelo",
+                    "name": "Modelo",
                     "brand": "Fabricante",
-                    "p_stc": "Potencia STC (W)",
-                    "gamma": "Coeficiente de Temperatura (%/°C)",
+                    "p_stc": "Potencia (STC)",
+                    "gamma": "Coeficiente de t° (%/°C)",
                     "noct": "NOCT (°C)",
-                    "voc": "Voltaje de Circuito Abierto (Voc)",
-                    "isc": "Corriente de Cortocircuito (Isc)",
-                    "vmp": "Voltaje a Máxima Potencia (Vmp)",
-                    "imp": "Corriente a Máxima Potencia (Imp)"
-                }
-            },
-            "add_irradiance_sensor": {
-                "title": "Añadir sensor de Irradiancia",
-                "description": "Configura un sensor de irradiancia existente.",
-                "data": {
-                    "name": "Nombre",
-                    "irradiance_sensor": "Sensor de Irradiancia",
-                    "temp_sensor": "Sensor de Temperatura",
-                    "wind_sensor": "Sensor de Viento"
+                    "voc": "Voc",
+                    "isc": "Isc",
+                    "vmp": "Vmp",
+                    "imp": "Imp"
                 }
             },
             "add_string": {
-                "title": "Añadir String - Marca",
-                "description": "Paso 1: Selecciona la marca del panel.",
+                "title": "Nuevo String",
+                "description": "Selecciona el fabricante del módulo.",
                 "data": {
-                    "brand": "Marca del Panel"
+                    "brand": "Fabricante del Modulo Fotovoltaico"
                 }
             },
             "add_string_details": {
-                "title": "Añadir Sensor FV - Detalles del String",
-                "description": "Paso 2: Configura el modelo y la geometría.",
+                "title": "Nuevo String",
+                "description": "Configura los sensores y detalles del string.",
                 "data": {
-                    "string_name": "Nombre del Sensor",
-                    "panel_model": "Modelo de Panel",
-                    "num_panels": "Número de Paneles (Serie)",
-                    "num_strings": "Número de Strings en Paralelo",
-                    "azimuth": "Azimut (180=Sur)",
-                    "tilt": "Inclinación (Grados)"
+                    "string_name": "Nombre",
+                    "irradiance_sensor": "Sensor de Irradiancia",
+                    "temp_sensor": "Sensor de t° ambiental",
+                    "temp_panel_sensor": "Sensor de t° del panel",
+                    "wind_sensor": "Sensor de v. viento (m/s)",
+                    "panel_model": "Módulo Fotovoltaico",
+                    "num_panels": "Número de paneles en serie",
+                    "num_strings": "Número de Series en paralelo",
+                    "tilt": "Inclinación (°)",
+                    "azimuth": "Orientación (180° = SUR)"
                 }
             }
         }

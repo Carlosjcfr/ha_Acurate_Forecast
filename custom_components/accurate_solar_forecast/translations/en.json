@@ -5,8 +5,9 @@
                 "title": "Solar Forecast Configuration",
                 "description": "Choose an action:",
                 "menu_options": {
-                    "add_string": "Add Production Sensor",
-                    "add_pv_model": "Add PV Panel Model"
+                    "add_pv_model": "Add PV Panel Model",
+                    "add_irradiance_sensor": "Add Irradiance Sensor",
+                    "add_string": "Add New String"
                 }
             },
             "add_pv_model": {

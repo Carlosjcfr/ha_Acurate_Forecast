@@ -77,17 +77,30 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_add_irradiance_sensor(self, user_input=None):
         if user_input is not None:
             # Create entry for irradiance sensor
+            # Si el usuario seleccionó de la lista, user_input["irradiance_sensor"] es el entity_id
             return self.async_create_entry(
                 title=user_input["name"],
                 data=user_input
             )
 
+        # Buscar sensores válidos manualmente para ser más flexibles
+        # A veces el device_class no está configurado pero la unidad es W/m²
+        valid_sensors = []
+        for state in self.hass.states.async_all("sensor"):
+            attributes = state.attributes
+            if (attributes.get("device_class") == "irradiance" or 
+                attributes.get("unit_of_measurement") in ["W/m²", "W/m2"]):
+                valid_sensors.append(state.entity_id)
+        
+        # Ordenar para que sea más fácil buscar (opcional, el selector ya ordena)
+        valid_sensors.sort()
+
         schema = vol.Schema({
             vol.Required("name"): str,
+            # Usamos EntitySelector pero restringimos a nuestra lista personalizada
             vol.Required("irradiance_sensor"): selector.EntitySelector(
                 selector.EntitySelectorConfig(
-                    domain="sensor", 
-                    device_class="irradiance"
+                    include_entities=valid_sensors
                 )
             ),
             vol.Optional(CONF_TEMP_SENSOR): selector.EntitySelector(

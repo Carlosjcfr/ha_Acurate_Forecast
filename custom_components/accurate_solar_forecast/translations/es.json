@@ -5,8 +5,9 @@
                 "title": "Accurate solar forecast",
                 "description": "Elije una Acción:",
                 "menu_options": {
-                    "add_string": "Añadir Sensor de Producción PV",
-                    "add_pv_model": "Añadir Modelo de Panel FV"
+                    "add_pv_model": "Añadir Modulo Fotovoltaico",
+                    "add_irradiance_sensor": "Añadir sensor de Irradiancia",
+                    "add_string": "Nuevo forecast de string"
                 }
             },
             "add_pv_model": {

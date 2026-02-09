@@ -130,10 +130,13 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="add_string", data_schema=schema)
 
     # --- PASO 2: DETALLES DEL STRING (FILTRADO POR MARCA) ---
+    # --- PASO 2: DETALLES DEL STRING (FILTRADO POR MARCA) ---
     async def async_step_add_string_details(self, user_input=None):
         if user_input is not None:
-            self.string_data = user_input
-            return await self.async_step_ref_sensor()
+            return self.async_create_entry(
+                title=user_input[CONF_STRING_NAME], 
+                data=user_input
+            )
 
         # Gets models for the selected brand
         models_filtered = self._db.list_models_by_brand(self.selected_brand)
@@ -153,35 +156,3 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
         })
 
         return self.async_show_form(step_id="add_string_details", data_schema=schema)
-
-    # --- PASO 3: SENSORES DE REFERENCIA Y AMBIENTALES ---
-    async def async_step_ref_sensor(self, user_input=None):
-        if user_input is not None:
-            # Merge data
-            full_data = {**self.string_data, **user_input}
-            return self.async_create_entry(
-                title=self.string_data[CONF_STRING_NAME], 
-                data=full_data
-            )
-            
-        schema = vol.Schema({
-            # Datos del Sensor Fuente (Origen)
-            vol.Required(CONF_REF_SENSOR): selector.EntitySelector(
-                selector.EntitySelectorConfig(
-                    domain="sensor", 
-                    device_class=["irradiance", "power"]
-                )
-            ),
-            vol.Required(CONF_REF_AZIMUTH, default=180): vol.Coerce(float),
-            vol.Required(CONF_REF_TILT, default=0): vol.Coerce(float), # 0 = Horizontal
-
-            # Sensores Ambientales
-            vol.Required(CONF_TEMP_SENSOR): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain="sensor", device_class="temperature")
-            ),
-            vol.Optional(CONF_WIND_SENSOR): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain="sensor", device_class="wind_speed")
-            ),
-        })
-
-        return self.async_show_form(step_id="ref_sensor", data_schema=schema)

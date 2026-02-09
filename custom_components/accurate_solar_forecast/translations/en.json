@@ -53,24 +53,14 @@
                     "azimuth": "Azimut (180=South)",
                     "tilt": "Tilt (Degrees)"
                 }
-            },
-            "ref_sensor": {
-                "title": "Add Production Sensor - Reference",
-                "description": "Step 3: Configure environmental and reference sensors.",
-                "data": {
-                    "ref_sensor": "Reference Irradiance Sensor (W/m2)",
-                    "ref_azimuth": "Reference Sensor Azimuth",
-                    "ref_tilt": "Reference Sensor Tilt",
-                    "temp_sensor": "Temperature Sensor",
-                    "wind_sensor": "Wind Speed Sensor"
-                }
             }
-        },
-        "error": {
-            "unknown": "Unexpected error"
-        },
-        "abort": {
-            "already_configured": "Device is already configured"
         }
+    },
+    "error": {
+        "unknown": "Unexpected error"
+    },
+    "abort": {
+        "already_configured": "Device is already configured"
     }
+}
 }

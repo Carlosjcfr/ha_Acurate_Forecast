@@ -53,24 +53,14 @@
                     "azimuth": "Azimut (180=Sur)",
                     "tilt": "Inclinación (Grados)"
                 }
-            },
-            "ref_sensor": {
-                "title": "Añadir Sensor FV - Sensores de Referencia",
-                "description": "Paso 3: Configura los sensores ambientales y de referencia.",
-                "data": {
-                    "ref_sensor": "Sensor de Irradiancia de Referencia (W/m2)",
-                    "ref_azimuth": "Azimut del Sensor de Referencia",
-                    "ref_tilt": "Inclinación del Sensor de Referencia",
-                    "temp_sensor": "Sensor de Temperatura",
-                    "wind_sensor": "Sensor de Viento"
-                }
             }
-        },
-        "error": {
-            "unknown": "Error inesperado"
-        },
-        "abort": {
-            "already_configured": "El dispositivo ya está configurado"
         }
+    },
+    "error": {
+        "unknown": "Error inesperado"
+    },
+    "abort": {
+        "already_configured": "El dispositivo ya está configurado"
     }
+}
 }

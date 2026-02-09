@@ -84,10 +84,10 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema = vol.Schema({
             vol.Required("name"): str,
-            vol.Required(CONF_REF_SENSOR): selector.EntitySelector(
+            vol.Required("irradiance_sensor"): selector.EntitySelector(
                 selector.EntitySelectorConfig(
                     domain="sensor", 
-                    device_class=["irradiance", "power"]
+                    device_class="irradiance"
                 )
             ),
             vol.Optional(CONF_TEMP_SENSOR): selector.EntitySelector(

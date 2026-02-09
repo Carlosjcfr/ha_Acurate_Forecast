@@ -29,7 +29,7 @@
                 "description": "Configura un sensor de irradiancia existente.",
                 "data": {
                     "name": "Nombre",
-                    "ref_sensor": "Sensor de Irradiancia",
+                    "irradiance_sensor": "Sensor de Irradiancia",
                     "temp_sensor": "Sensor de Temperatura",
                     "wind_sensor": "Sensor de Viento"
                 }

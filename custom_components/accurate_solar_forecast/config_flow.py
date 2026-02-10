@@ -80,7 +80,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
              
         return self._show_model_selector("pv_model_edit_select")
 
-     async def async_step_pv_model_edit_form(self, user_input=None):
+    async def async_step_pv_model_edit_form(self, user_input=None):
         if user_input is not None:
             # Update (Overwriting add_model handles update if ID matches, but ID logic needs care.
             # Here we assume user might change name, creating new ID? 

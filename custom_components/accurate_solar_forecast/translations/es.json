@@ -37,15 +37,15 @@
                 "title": "Nuevo Módulo FV",
                 "description": "Introduce las especificaciones técnicas.",
                 "data": {
-                    "name": "Modelo *",
-                    "brand": "Fabricante *",
-                    "p_stc": "Potencia (STC) *",
-                    "gamma": "Coeficiente de t° (%/°C) *",
-                    "noct": "NOCT (°C) *",
-                    "voc": "Voc *",
-                    "isc": "Isc *",
-                    "vmp": "Vmp *",
-                    "imp": "Imp *"
+                    "name": "Modelo",
+                    "brand": "Fabricante",
+                    "p_stc": "Potencia (STC)",
+                    "gamma": "Coeficiente de t° (%/°C)",
+                    "noct": "NOCT (°C)",
+                    "voc": "Voc",
+                    "isc": "Isc",
+                    "vmp": "Vmp",
+                    "imp": "Imp"
                 }
             },
             "pv_model_edit_select": {
@@ -59,28 +59,36 @@
                 "title": "Editar Módulo",
                 "description": "Modifica los datos técnicos.",
                 "data": {
-                    "name": "Modelo *",
-                    "brand": "Fabricante *",
-                    "p_stc": "Potencia (STC) *",
-                    "gamma": "Coeficiente de t° (%/°C) *",
-                    "noct": "NOCT (°C) *",
-                    "voc": "Voc *",
-                    "isc": "Isc *",
-                    "vmp": "Vmp *",
-                    "imp": "Imp *"
+                    "name": "Modelo",
+                    "brand": "Fabricante",
+                    "p_stc": "Potencia (STC)",
+                    "gamma": "Coeficiente de t° (%/°C)",
+                    "noct": "NOCT (°C)",
+                    "voc": "Voc",
+                    "isc": "Isc",
+                    "vmp": "Vmp",
+                    "imp": "Imp"
+                }
+            },
+            "pv_model_success": {
+                "title": "Operación Realizada",
+                "description": "¿Qué hacer ahora?",
+                "menu_options": {
+                    "pv_model_create": "Añadir otro módulo",
+                    "pv_model_finish": "Finalizar y salir"
                 }
             },
             "sensor_group_create": {
                 "title": "Crear Grupo de Sensores",
                 "description": "Define los sensores físicos disponibles.",
                 "data": {
-                    "sensor_group_name": "Nombre del Grupo *",
-                    "irradiance_sensor": "Irradiancia *",
-                    "temperature_sensor": "Tª Ambiental *",
+                    "sensor_group_name": "Nombre del Grupo",
+                    "irradiance_sensor": "Irradiancia",
+                    "temperature_sensor": "Tª Ambiental",
                     "temp_panel_sensor": "Tª del panel",
                     "wind_sensor": "Sensor de v. viento (m/s)",
-                    "ref_tilt": "Inclinación sensor de irrad (º) *",
-                    "ref_orientation": "Orientación sensor de irrad (180º=S) *"
+                    "ref_tilt": "Inclinación sensor de irrad (º)",
+                    "ref_orientation": "Orientación sensor de irrad (180º=S)"
                 }
             },
             "sensor_group_edit_select": {
@@ -94,33 +102,33 @@
                 "title": "Editar Grupo",
                 "description": "Modifica la configuración del grupo.",
                 "data": {
-                    "sensor_group_name": "Nombre del Grupo *",
-                    "irradiance_sensor": "Irradiancia *",
-                    "temperature_sensor": "Tª Ambiental *",
+                    "sensor_group_name": "Nombre del Grupo",
+                    "irradiance_sensor": "Irradiancia",
+                    "temperature_sensor": "Tª Ambiental",
                     "temp_panel_sensor": "Tª del panel",
                     "wind_sensor": "Sensor de v. viento (m/s)",
-                    "ref_tilt": "Inclinación sensor de irrad (º) *",
-                    "ref_orientation": "Orientación sensor de irrad (180º=S) *"
+                    "ref_tilt": "Inclinación sensor de irrad (º)",
+                    "ref_orientation": "Orientación sensor de irrad (180º=S)"
                 }
             },
             "string_create_select_brand": {
                 "title": "Nuevo String",
                 "description": "Paso 1: Selecciona Sensores y Panel.",
                 "data": {
-                    "string_name": "Nombre del String *",
-                    "selected_sensor_group": "Grupo de Sensores *",
-                    "brand": "Fabricante del Panel *"
+                    "string_name": "Nombre del String",
+                    "selected_sensor_group": "Grupo de Sensores",
+                    "brand": "Fabricante del Panel"
                 }
             },
             "string_create_details": {
                 "title": "Detalles del String",
                 "description": "Paso 2: Geometría y Modelo.",
                 "data": {
-                    "panel_model": "Modelo de Panel *",
-                    "num_panels": "Paneles en serie *",
-                    "num_strings": "Series en paralelo *",
-                    "tilt": "Inclinación Paneles (º) *",
-                    "azimuth": "Orientación Paneles (180º=S) *"
+                    "panel_model": "Modelo de Panel",
+                    "num_panels": "Paneles en serie",
+                    "num_strings": "Series en paralelo",
+                    "tilt": "Inclinación Paneles (º)",
+                    "azimuth": "Orientación Paneles (180º=S)"
                 }
             }
         }

@@ -37,15 +37,15 @@
                 "title": "New PV Module",
                 "description": "Enter technical specifications.",
                 "data": {
-                    "name": "Model *",
-                    "brand": "Manufacturer *",
-                    "p_stc": "Power (STC) *",
-                    "gamma": "Temp Coeff (%/°C) *",
-                    "noct": "NOCT (°C) *",
-                    "voc": "Voc *",
-                    "isc": "Isc *",
-                    "vmp": "Vmp *",
-                    "imp": "Imp *"
+                    "name": "Model",
+                    "brand": "Manufacturer",
+                    "p_stc": "Power (STC)",
+                    "gamma": "Temp Coeff (%/°C)",
+                    "noct": "NOCT (°C)",
+                    "voc": "Voc",
+                    "isc": "Isc",
+                    "vmp": "Vmp",
+                    "imp": "Imp"
                 }
             },
             "pv_model_edit_select": {
@@ -59,28 +59,36 @@
                 "title": "Edit Module",
                 "description": "Modify technical data.",
                 "data": {
-                    "name": "Model *",
-                    "brand": "Manufacturer *",
-                    "p_stc": "Power (STC) *",
-                    "gamma": "Temp Coeff (%/°C) *",
-                    "noct": "NOCT (°C) *",
-                    "voc": "Voc *",
-                    "isc": "Isc *",
-                    "vmp": "Vmp *",
-                    "imp": "Imp *"
+                    "name": "Model",
+                    "brand": "Manufacturer",
+                    "p_stc": "Power (STC)",
+                    "gamma": "Temp Coeff (%/°C)",
+                    "noct": "NOCT (°C)",
+                    "voc": "Voc",
+                    "isc": "Isc",
+                    "vmp": "Vmp",
+                    "imp": "Imp"
+                }
+            },
+            "pv_model_success": {
+                "title": "Operation Successful",
+                "description": "What do you want to do now?",
+                "menu_options": {
+                    "pv_model_create": "Add Another Module",
+                    "pv_model_finish": "Finish & Exit"
                 }
             },
             "sensor_group_create": {
                 "title": "Create Sensor Group",
                 "description": "Define physical sensors available.",
                 "data": {
-                    "sensor_group_name": "Group Name *",
-                    "irradiance_sensor": "Irradiance *",
-                    "temperature_sensor": "Ambient Temp *",
+                    "sensor_group_name": "Group Name",
+                    "irradiance_sensor": "Irradiance",
+                    "temperature_sensor": "Ambient Temp",
                     "temp_panel_sensor": "Panel Temp",
                     "wind_sensor": "Wind Speed (m/s)",
-                    "ref_tilt": "Irrad. Sensor Tilt (°) *",
-                    "ref_orientation": "Irrad. Sensor Orientation (180°=S) *"
+                    "ref_tilt": "Irrad. Sensor Tilt (°)",
+                    "ref_orientation": "Irrad. Sensor Orientation (180°=S)"
                 }
             },
             "sensor_group_edit_select": {
@@ -94,33 +102,33 @@
                 "title": "Edit Group",
                 "description": "Modify group configuration.",
                 "data": {
-                    "sensor_group_name": "Group Name *",
-                    "irradiance_sensor": "Irradiance *",
-                    "temperature_sensor": "Ambient Temp *",
+                    "sensor_group_name": "Group Name",
+                    "irradiance_sensor": "Irradiance",
+                    "temperature_sensor": "Ambient Temp",
                     "temp_panel_sensor": "Panel Temp",
                     "wind_sensor": "Wind Speed (m/s)",
-                    "ref_tilt": "Irrad. Sensor Tilt (°) *",
-                    "ref_orientation": "Irrad. Sensor Orientation (180°=S) *"
+                    "ref_tilt": "Irrad. Sensor Tilt (°)",
+                    "ref_orientation": "Irrad. Sensor Orientation (180°=S)"
                 }
             },
             "string_create_select_brand": {
                 "title": "New String",
                 "description": "Step 1: Select Sensors and Panel.",
                 "data": {
-                    "string_name": "String Name *",
-                    "selected_sensor_group": "Sensor Group *",
-                    "brand": "Panel Manufacturer *"
+                    "string_name": "String Name",
+                    "selected_sensor_group": "Sensor Group",
+                    "brand": "Panel Manufacturer"
                 }
             },
             "string_create_details": {
                 "title": "String Details",
                 "description": "Step 2: Geometry and Model.",
                 "data": {
-                    "panel_model": "Panel Model *",
-                    "num_panels": "Series Panels *",
-                    "num_strings": "Parallel Strings *",
-                    "tilt": "Panel Tilt (°) *",
-                    "azimuth": "Panel Azimuth (180°=S) *"
+                    "panel_model": "Panel Model",
+                    "num_panels": "Series Panels",
+                    "num_strings": "Parallel Strings",
+                    "tilt": "Panel Tilt (°)",
+                    "azimuth": "Panel Azimuth (180°=S)"
                 }
             }
         }

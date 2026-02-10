@@ -68,7 +68,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_VMP],
                 user_input[CONF_IMP]
             )
-            return self.async_create_entry(title=f"PV Model: {user_input['name']}", data={})
+            return await self.async_step_pv_model_success()
 
         return self._show_pv_model_form("pv_model_create", errors)
 
@@ -80,7 +80,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
              
         return self._show_model_selector("pv_model_edit_select")
 
-    async def async_step_pv_model_edit_form(self, user_input=None):
+     async def async_step_pv_model_edit_form(self, user_input=None):
         if user_input is not None:
             # Update (Overwriting add_model handles update if ID matches, but ID logic needs care.
             # Here we assume user might change name, creating new ID? 
@@ -91,7 +91,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             
             # If name changed, we should probably delete old one? 
             # This is complex. Let's just update for now.
-             await self._db.add_model(
+            await self._db.add_model(
                 user_input["name"],
                 user_input[CONF_BRAND],
                 user_input["p_stc"],
@@ -102,13 +102,25 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_VMP],
                 user_input[CONF_IMP]
             )
-             return self.async_create_entry(title=f"Updated Model: {user_input['name']}", data={})
-        
+            return await self.async_step_pv_model_success()
+
         # Load Data
         # We need to find the model data by name/id
         # The selector returned the ID (name based key)
         model_data = self._db.get_model(self.selected_item_id)
         return self._show_pv_model_form("pv_model_edit_form", {}, default_data=model_data)
+
+    # 1.3 SUCCESS & LOOP (Menu intermedio)
+    async def async_step_pv_model_success(self, user_input=None):
+        """Menu intermedio tras crear/editar modelo."""
+        return self.async_show_menu(
+            step_id="pv_model_success",
+            menu_options=["pv_model_create", "pv_model_finish"]
+        )
+
+    async def async_step_pv_model_finish(self, user_input=None):
+        """Finalizar el flujo de modelos (sin crear entrada en HA, solo guardando DB)."""
+        return self.async_abort(reason="models_saved")
 
 
     # Helper: Model Form
@@ -226,6 +238,8 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_REF_SENSOR, default=default_data.get(CONF_REF_SENSOR, vol.UNDEFINED)): selector.EntitySelector(
                 selector.EntitySelectorConfig(include_entities=valid_irradiance_sensors)
             ),
+            vol.Required(CONF_REF_TILT, default=default_data.get(CONF_REF_TILT, 0)): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
+            vol.Required(CONF_REF_ORIENTATION, default=default_data.get(CONF_REF_ORIENTATION, 180)): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
             vol.Required(CONF_TEMP_SENSOR, default=default_data.get(CONF_TEMP_SENSOR, vol.UNDEFINED)): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor", device_class="temperature")
             ),
@@ -235,8 +249,6 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_WIND_SENSOR, default=default_data.get(CONF_WIND_SENSOR, vol.UNDEFINED)): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor", device_class="wind_speed")
             ),
-            vol.Required(CONF_REF_TILT, default=default_data.get(CONF_REF_TILT, 0)): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
-            vol.Required(CONF_REF_ORIENTATION, default=default_data.get(CONF_REF_ORIENTATION, 180)): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
         })
         return self.async_show_form(step_id=step_id, data_schema=schema, errors=errors)
 

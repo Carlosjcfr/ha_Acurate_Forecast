@@ -5,93 +5,131 @@
                 "title": "Accurate solar forecast",
                 "description": "¿Que quieres añadir?",
                 "menu_options": {
-                    "add_pv_model": "Nuevo Módulo Fotovoltaico",
-                    "add_string": "Nuevo String",
-                    "configure_sensors": "Configurar sensores"
+                    "menu_pv_models": "Configurar Módulos Fotovoltaicos",
+                    "menu_strings": "Configurar Strings",
+                    "menu_sensor_groups": "Configurar sensores"
                 }
             },
-            "add_pv_model": {
-                "title": "Nuevo Módulo FV",
-                "description": "Introduce las especificaciones técnicas de tu panel fotovoltaico.",
-                "data": {
-                    "name": "Modelo",
-                    "brand": "Fabricante",
-                    "p_stc": "Potencia (STC)",
-                    "gamma": "Coeficiente de t° (%/°C)",
-                    "noct": "NOCT (°C)",
-                    "voc": "Voc",
-                    "isc": "Isc",
-                    "vmp": "Vmp",
-                    "imp": "Imp"
-                }
-            },
-            "configure_sensors": {
-                "title": "Configurar Sensores",
-                "description": "Gestiona tus grupos de sensores.",
+            "menu_pv_models": {
+                "title": "Acciones",
+                "description": "Base de datos de paneles.",
                 "menu_options": {
-                    "create_sensor_group": "Crear grupo de sensores",
-                    "edit_sensor_group_select": "Editar grupo de sensores"
+                    "pv_model_create": "Crear módulo FV",
+                    "pv_model_edit_select": "Editar módulo FV"
                 }
             },
-            "create_sensor_group": {
-                "title": "Crear Grupo de Sensores",
-                "description": "Define los sensores físicos disponibles en una ubicación.",
+            "menu_strings": {
+                "title": "Acciones",
+                "description": "Configuración de arrays solares.",
+                "menu_options": {
+                    "string_create_select_brand": "Crear String"
+                }
+            },
+            "menu_sensor_groups": {
+                "title": "Acciones",
+                "description": "Configuración de grupos de sensores.",
+                "menu_options": {
+                    "sensor_group_create": "Crear grupo",
+                    "sensor_group_edit_select": "Editar grupo"
+                }
+            },
+            "pv_model_create": {
+                "title": "Nuevo Módulo FV",
+                "description": "Introduce las especificaciones técnicas.",
                 "data": {
-                    "sensor_group_name": "Nombre del Grupo",
+                    "name": "Modelo *",
+                    "brand": "Fabricante *",
+                    "p_stc": "Potencia (STC) *",
+                    "gamma": "Coeficiente de t° (%/°C) *",
+                    "noct": "NOCT (°C) *",
+                    "voc": "Voc *",
+                    "isc": "Isc *",
+                    "vmp": "Vmp *",
+                    "imp": "Imp *"
+                }
+            },
+            "pv_model_edit_select": {
+                "title": "Editar Módulo",
+                "description": "Selecciona el módulo a editar.",
+                "data": {
+                    "selected_model": "Módulo Fotovoltaico"
+                }
+            },
+            "pv_model_edit_form": {
+                "title": "Editar Módulo",
+                "description": "Modifica los datos técnicos.",
+                "data": {
+                    "name": "Modelo *",
+                    "brand": "Fabricante *",
+                    "p_stc": "Potencia (STC) *",
+                    "gamma": "Coeficiente de t° (%/°C) *",
+                    "noct": "NOCT (°C) *",
+                    "voc": "Voc *",
+                    "isc": "Isc *",
+                    "vmp": "Vmp *",
+                    "imp": "Imp *"
+                }
+            },
+            "sensor_group_create": {
+                "title": "Crear Grupo de Sensores",
+                "description": "Define los sensores físicos disponibles.",
+                "data": {
+                    "sensor_group_name": "Nombre del Grupo *",
                     "irradiance_sensor": "Irradiancia *",
                     "temperature_sensor": "Tª Ambiental *",
-                    "temp_panel_sensor": "Tª del panel *",
+                    "temp_panel_sensor": "Tª del panel",
                     "wind_sensor": "Sensor de v. viento (m/s)",
                     "ref_tilt": "Inclinación sensor de irrad (º) *",
-                    "ref_orientation": "Orientación sensor de irrad. (180º=S) *"
+                    "ref_orientation": "Orientación sensor de irrad (180º=S) *"
                 }
             },
-            "edit_sensor_group_select": {
+            "sensor_group_edit_select": {
                 "title": "Editar Grupo",
-                "description": "Selecciona el grupo de sensores a editar.",
+                "description": "Selecciona el grupo a editar.",
                 "data": {
                     "selected_group": "Grupo de Sensores"
                 }
             },
-            "edit_sensor_group_form": {
+            "sensor_group_edit_form": {
                 "title": "Editar Grupo",
-                "description": "Modifica los sensores o la geometría.",
+                "description": "Modifica la configuración del grupo.",
                 "data": {
-                    "sensor_group_name": "Nombre del Grupo",
+                    "sensor_group_name": "Nombre del Grupo *",
                     "irradiance_sensor": "Irradiancia *",
                     "temperature_sensor": "Tª Ambiental *",
-                    "temp_panel_sensor": "Tª del panel *",
+                    "temp_panel_sensor": "Tª del panel",
                     "wind_sensor": "Sensor de v. viento (m/s)",
                     "ref_tilt": "Inclinación sensor de irrad (º) *",
-                    "ref_orientation": "Orientación sensor de irrad. (180º=S) *"
+                    "ref_orientation": "Orientación sensor de irrad (180º=S) *"
                 }
             },
-            "add_string": {
+            "string_create_select_brand": {
                 "title": "Nuevo String",
-                "description": "Vincula un grupo de sensores a un modelo de placa.",
+                "description": "Paso 1: Selecciona Sensores y Panel.",
                 "data": {
-                    "string_name": "Nombre del String",
-                    "selected_sensor_group": "Grupo de Sensores",
-                    "brand": "Fabricante del Panel"
+                    "string_name": "Nombre del String *",
+                    "selected_sensor_group": "Grupo de Sensores *",
+                    "brand": "Fabricante del Panel *"
                 }
             },
-            "add_string_details": {
+            "string_create_details": {
                 "title": "Detalles del String",
-                "description": "Configura la geometría del array fotovoltaico.",
+                "description": "Paso 2: Geometría y Modelo.",
                 "data": {
-                    "panel_model": "Modelo de Panel",
-                    "num_panels": "Paneles en serie",
-                    "num_strings": "Series en paralelo",
-                    "tilt": "Inclinación Paneles (°)",
-                    "azimuth": "Orientación Paneles (180=S)"
+                    "panel_model": "Modelo de Panel *",
+                    "num_panels": "Paneles en serie *",
+                    "num_strings": "Series en paralelo *",
+                    "tilt": "Inclinación Paneles (º) *",
+                    "azimuth": "Orientación Paneles (180º=S) *"
                 }
             }
         }
     },
     "error": {
         "unknown": "Error inesperado",
-        "no_sensor_groups": "No hay grupos de sensores creados. Crea uno primero.",
-        "no_sensor_groups_available": "No hay grupos de sensores disponibles. Ve atrás y crea uno en 'Configurar sensores'."
+        "no_models_available": "No hay modelos creados. Crea uno primero en 'Configurar Módulos FV'.",
+        "no_sensor_groups": "No hay grupos de sensores. Crea uno primero.",
+        "no_sensor_groups_available": "No hay grupos de sensores disponibles."
     },
     "abort": {
         "already_configured": "El dispositivo ya está configurado"

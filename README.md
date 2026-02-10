@@ -54,39 +54,35 @@ Sistema de gestión de inventario integrado.
 
 Ve a **Ajustes** > **Dispositivos y Servicios** > **Añadir Integración** > **Accurate Solar Forecast**.
 
-### Paso 1: Crear un Modelo de Panel (PV Model)
+Verás un nuevo menú principal estructurado en tres secciones:
 
-Selecciona la opción **"Nuevo Módulo Fotovoltaico"**. Necesitarás la ficha técnica de tu placa:
+### 1. 🏭 Configurar Módulos Fotovoltaicos (PV Models)
 
-* **Modelo:** Nombre identificativo (Ej: `Longi 450W Hi-MO`).
-* **Fabricante:** Marca del panel (Ej: `Longi`, `Jinko`...).
-* **Especificaciones:** Potencia (STC), Gamma (%/°C), NOCT, Voc, Isc, Vmp, Imp.
+Aquí gestionas tu "inventario" de paneles.
 
-### Paso 2: Configurar Sensores (Sensor Group)
+* **Crear Nuevo Módulo:** Introduce la ficha técnica de tu panel.
+* **Editar Módulo Existente:** Modifica datos si te equivocaste.
+* **Eliminar Módulo:** Borra modelos que ya no necesites.
 
-Antes de crear strings, define qué sensores tienes disponibles. Selecciona **"Configurar Sensores"** > **"Crear Grupo"**:
+### 2. 🌡️ Configurar Sensores
 
-1. **Nombre:** Identificador del grupo (Ej: "Estación Metereológica Tejado").
-2. **Sensores Físicos:**
-    * **Irradiancia (Obligatorio)**.
-    * **Temperatura Ambiental (Obligatorio)**.
-    * **Temp. Panel / Viento (Opcionales)**.
-3. **Geometría del Sensor:**
-    * Defines cómo está instalado tu sensor de irradiancia (Tilt y Orientación). Esto es vital para calcular la transposición correctamente.
+Define tus estaciones meteorológicas o grupos de sensores.
 
-*Resultado:* Se creará un **Dispositivo** en Home Assistant con las entidades de los sensores configurados.
+* **Crear Grupo de Sensores:** Selecciona tus sensores de irradiancia y temperatura. Define también la **Inclinación y Orientación** física de tu sensor de irradiancia. Esto crea un nuevo Dispositivo en Home Assistant.
+* **Editar Grupo de Sensores:** Modifica una configuración existente.
 
-### Paso 3: Crear un String
+*Nota: Para eliminar un Grupo de Sensores, bórralo directamente desde la vista de integraciones de Home Assistant.*
 
-Selecciona **"Nuevo String"**. El proceso ahora es muy rápido:
+### 3. ☀️ Configurar Strings
 
-1. **Selecciona Grupo de Sensores:** Elige la estación meteorológica que alimentará los cálculos de este string.
-2. **Selecciona Fabricante del Panel:** Elige la marca.
-3. **Configura Detalles del String:**
-    * **Nombre:** (Ej: "String Pérgola").
-    * **Módulo FV:** Selecciona el modelo específico.
-    * **Configuración Eléctrica:** Número de paneles en serie y strings en paralelo.
-    * **Geometría del Panel:** Inclinación (Tilt) y Orientación (Azimut) de las placas.
+Aquí creas tus arrays solares virtuales.
+
+* **Crear Nuevo String:**
+    1. Selecciona qué **Grupo de Sensores** alimenta este string.
+    2. Selecciona el **Módulo FV** (Marca/Modelo) de tu base de datos.
+    3. Define la **Geometría del Panel** (Tilt/Azimut) y el número de paneles.
+
+*Resultado:* Se creará una entidad String que simula la producción. *Nota: Para eliminar un String, bórralo directamente desde la vista de integraciones de Home Assistant.*
 
 ---
 

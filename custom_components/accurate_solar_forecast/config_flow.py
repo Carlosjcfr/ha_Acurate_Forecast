@@ -131,6 +131,10 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 selector.EntitySelectorConfig(domain="sensor", device_class="wind_speed")
             ),
 
+            # --- SECCION DATOS DEL SENSOR DE REFERENCIA ---
+            vol.Required(CONF_REF_TILT, default=0): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
+            vol.Required(CONF_REF_ORIENTATION, default=180): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+
             # --- SECCION DATOS DEL STRING ---
             # Selector de Modelo FILTRADO
             vol.Required(CONF_PANEL_MODEL): selector.SelectSelector(

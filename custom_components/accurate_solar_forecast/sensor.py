@@ -115,7 +115,7 @@ class SolarStringSensor(SensorEntity):
         cos_theta_target = self.calculate_cos_incidence(sun_az, sun_el, target_az, target_tilt)
 
         # Sensor Referencia
-        ref_az = self._config.get(CONF_REF_AZIMUTH)
+        ref_az = self._config.get(CONF_REF_ORIENTATION)
         ref_tilt = self._config.get(CONF_REF_TILT)
         cos_theta_ref = self.calculate_cos_incidence(sun_az, sun_el, ref_az, ref_tilt)
 

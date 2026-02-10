@@ -40,6 +40,8 @@
                     "temp_sensor": "Ambient Temp Sensor",
                     "temp_panel_sensor": "Panel Temp Sensor",
                     "wind_sensor": "Wind Speed Sensor (m/s)",
+                    "ref_tilt": "Ref. Sensor Tilt",
+                    "ref_orientation": "Ref. Sensor Orientation",
                     "panel_model": "PV Module",
                     "num_panels": "Series Panels Count",
                     "num_strings": "Parallel Strings Count",

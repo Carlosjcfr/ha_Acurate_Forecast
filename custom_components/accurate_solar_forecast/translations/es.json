@@ -40,6 +40,8 @@
                     "temp_sensor": "Sensor de t° ambiental",
                     "temp_panel_sensor": "Sensor de t° del panel",
                     "wind_sensor": "Sensor de v. viento (m/s)",
+                    "ref_tilt": "Inclinación Sensor Ref.",
+                    "ref_orientation": "Orientación Sensor Ref.",
                     "panel_model": "Módulo Fotovoltaico",
                     "num_panels": "Número de paneles en serie",
                     "num_strings": "Número de Series en paralelo",

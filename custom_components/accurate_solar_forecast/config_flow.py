@@ -46,9 +46,19 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # =================================================================================
     async def async_step_menu_pv_models(self, user_input=None):
         """Submenú para Módulos FV."""
+        options = ["pv_model_create"]
+        if self._db.list_models():
+             options.append("pv_model_edit_select")
+             # Only show delete if there are models other than the default one?
+             # For simplicity and to follow instructions "check if stored previously"
+             # Since default is always there, Edit keeps appearing.
+             # Delete should probably check if there is > 1 model (assuming default is undeletable)
+             # But let's stick to the rule: if models exist -> show options.
+             options.append("pv_model_delete_select")
+             
         return self.async_show_menu(
             step_id="menu_pv_models",
-            menu_options=["pv_model_create", "pv_model_edit_select", "pv_model_delete_select"]
+            menu_options=options
         )
 
     # 1.1 CREATE PV MODEL
@@ -187,10 +197,13 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # BRANCH 2: SENSOR GROUPS (Integraciones - Create & Edit Only)
     # =================================================================================
     async def async_step_menu_sensor_groups(self, user_input=None):
+        options = ["sensor_group_create"]
+        if self._db.list_sensor_groups():
+            options.append("sensor_group_edit_select")
+            
         return self.async_show_menu(
             step_id="menu_sensor_groups",
-             # Removed 'delete' option as per user request to use native HA delete
-            menu_options=["sensor_group_create", "sensor_group_edit_select"]
+            menu_options=options
         )
 
     # 2.1 CREATE SENSOR GROUP
@@ -283,10 +296,18 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # BRANCH 3: STRINGS (Integraciones - Create & Edit Only)
     # =================================================================================
     async def async_step_menu_strings(self, user_input=None):
+        options = ["string_create_select_brand"]
+        
+        # Check if there are any strings created
+        entries = self.hass.config_entries.async_entries(DOMAIN)
+        string_count = sum(1 for e in entries if CONF_STRING_NAME in e.data)
+        
+        if string_count > 0:
+            options.append("string_edit_select")
+
         return self.async_show_menu(
             step_id="menu_strings",
-            # Removed delete, Edit String to be implemented later fully
-            menu_options=["string_create_select_brand", "string_edit_select"] 
+            menu_options=options 
         )
 
     # 3.1 CREATE STRING - Step A: Select Brand & Group

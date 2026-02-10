@@ -7,7 +7,7 @@
                 "menu_options": {
                     "menu_pv_models": "Configurar Módulos Fotovoltaicos",
                     "menu_strings": "Configurar Strings",
-                    "menu_sensor_groups": "Configurar sensores"
+                    "menu_sensor_groups": "Configurar Sensores"
                 }
             },
             "menu_pv_models": {
@@ -167,7 +167,8 @@
             "cannot_delete_default": "No se puede eliminar el modelo predeterminado."
         },
         "abort": {
-            "already_configured": "El dispositivo ya está configurado"
+            "already_configured": "El dispositivo ya está configurado",
+            "models_saved": "Listado de módulos actualizados!"
         }
     }
 }

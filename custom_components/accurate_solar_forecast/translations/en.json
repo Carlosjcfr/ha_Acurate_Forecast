@@ -7,7 +7,7 @@
                 "menu_options": {
                     "menu_pv_models": "Configure PV Modules",
                     "menu_strings": "Configure Strings",
-                    "menu_sensor_groups": "Configure sensors"
+                    "menu_sensor_groups": "Configure Sensors"
                 }
             },
             "menu_pv_models": {
@@ -167,7 +167,8 @@
             "cannot_delete_default": "Cannot delete the default model."
         },
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "models_saved": "PV Modules list updated!"
         }
     }
 }

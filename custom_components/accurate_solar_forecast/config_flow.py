@@ -80,7 +80,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
              
         return self._show_model_selector("pv_model_edit_select")
 
-     async def async_step_pv_model_edit_form(self, user_input=None):
+    async def async_step_pv_model_edit_form(self, user_input=None):
         if user_input is not None:
             # Update (Overwriting add_model handles update if ID matches, but ID logic needs care.
             # Here we assume user might change name, creating new ID? 
@@ -259,7 +259,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_menu(
             step_id="menu_strings",
             # Removed delete, Edit String to be implemented later fully
-            menu_options=["string_create_select_brand"] 
+            menu_options=["string_create_select_brand", "string_edit_select"] 
         )
 
     # 3.1 CREATE STRING - Step A: Select Brand & Group
@@ -309,3 +309,80 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_AZIMUTH, default=180): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
         })
         return self.async_show_form(step_id="string_create_details", data_schema=schema)
+
+    # 3.2 EDIT STRING - Select String
+    async def async_step_string_edit_select(self, user_input=None):
+        if user_input is not None:
+             self.selected_item_id = user_input["selected_string"]
+             # We need to load existing data to pre-fill
+             # But ConfigEntries data is stored in HA, not our DB
+             # We can find the entry by ID
+             entry = self.hass.config_entries.async_get_entry(self.selected_item_id)
+             if entry:
+                 self.temp_data = entry.data.copy()
+                 # We might jump directly to details if we assume Brand and Group don't change often?
+                 # Or we can allow full edit. Let's allow full edit starting from Brand/Group.
+                 # Pre-filling might be tricky if we want to change brand.
+                 return await self.async_step_string_edit_details()
+        
+        # List ONLY our integration's entries
+        entries = self.hass.config_entries.async_entries(DOMAIN)
+        # Filter only "String" entries (those that have string_name or similar distinctive data)
+        # Or better yet, we can filter by checking if they are NOT Sensor Groups?
+        # A simpler way: Sensor Groups have 'sensor_group_name', Strings have 'string_name'
+        string_options = {e.entry_id: e.title for e in entries if CONF_STRING_NAME in e.data}
+        
+        if not string_options:
+             return self.async_abort(reason="no_strings_available")
+
+        schema = vol.Schema({
+            vol.Required("selected_string"): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=list(string_options.values()), custom_value=False, mode="dropdown")
+                # Note: keys are IDs, but selector returns value? No, with options list it returns value if not set specific
+                # Let's use Label/Value dict if possible or just list of IDs map to names?
+                # Selector with simple list options returns the string selected.
+            )
+        })
+        # Wait, SelectSelector with simple list returns the string. We need ID.
+        # We need a map. {id: name}. SelectSelector options is list of strings or dicts {value: ..., label: ...}
+        options_list = [{"value": k, "label": v} for k, v in string_options.items()]
+
+        schema = vol.Schema({
+            vol.Required("selected_string"): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=options_list, mode="dropdown")
+            )
+        })
+        return self.async_show_form(step_id="string_edit_select", data_schema=schema)
+
+    async def async_step_string_edit_details(self, user_input=None):
+         # This needs to be similar to create but updating.
+         # For simplicity in V1 for edit:
+         # We just show the details form directly assuming user wants to tweak geometry/model.
+         # If they want to change Brand/Group they might strictly need to recreate or we add 'step 1 edit'
+         # Let's simple Edit Details only for now.
+         
+         if user_input is not None:
+             # Update Entry
+             entry = self.hass.config_entries.async_get_entry(self.selected_item_id)
+             if entry:
+                 new_data = {**entry.data, **user_input}
+                 self.hass.config_entries.async_update_entry(entry, data=new_data)
+                 return self.async_create_entry(title=f"Updated: {entry.title}", data={})
+         
+         # Load defaults
+         default_data = self.temp_data
+         
+         # Note: We need the list of models for the *current* brand saved in data
+         brand = default_data.get(CONF_BRAND, "Generic")
+         models_filtered = self._db.list_models_by_brand(brand)
+         
+         schema = vol.Schema({
+            vol.Required(CONF_PANEL_MODEL, default=default_data.get(CONF_PANEL_MODEL)): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=list(models_filtered.values()), mode="dropdown")
+            ),
+            vol.Required(CONF_NUM_PANELS, default=default_data.get(CONF_NUM_PANELS, 1)): int,
+            vol.Required(CONF_NUM_STRINGS, default=default_data.get(CONF_NUM_STRINGS, 1)): int,
+            vol.Required(CONF_TILT, default=default_data.get(CONF_TILT, 30)): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
+            vol.Required(CONF_AZIMUTH, default=default_data.get(CONF_AZIMUTH, 180)): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+        })
+         return self.async_show_form(step_id="string_edit_details", data_schema=schema)

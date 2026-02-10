@@ -71,7 +71,7 @@
                 }
             },
             "pv_model_success": {
-                "title": "Operación Realizada",
+                "title": "Éxito",
                 "description": "¿Qué hacer ahora?",
                 "menu_options": {
                     "pv_model_create": "Añadir otro módulo",
@@ -130,16 +130,35 @@
                     "tilt": "Inclinación Paneles (º)",
                     "azimuth": "Orientación Paneles (180º=S)"
                 }
+            },
+            "string_edit_select": {
+                "title": "Editar String",
+                "description": "Selecciona el string a modificar.",
+                "data": {
+                    "selected_string": "String Solar"
+                }
+            },
+            "string_edit_details": {
+                "title": "Editar String",
+                "description": "Modifica la geometría o el modelo del string.",
+                "data": {
+                    "panel_model": "Modelo de Panel",
+                    "num_panels": "Paneles en serie",
+                    "num_strings": "Series en paralelo",
+                    "tilt": "Inclinación Paneles (º)",
+                    "azimuth": "Orientación Paneles (180º=S)"
+                }
             }
+        },
+        "error": {
+            "unknown": "Error inesperado",
+            "no_models_available": "No hay modelos creados. Crea uno primero en 'Configurar Módulos FV'.",
+            "no_sensor_groups": "No hay grupos de sensores. Crea uno primero.",
+            "no_sensor_groups_available": "No hay grupos de sensores disponibles.",
+            "no_strings_available": "No hay strings configurados para editar."
+        },
+        "abort": {
+            "already_configured": "El dispositivo ya está configurado"
         }
-    },
-    "error": {
-        "unknown": "Error inesperado",
-        "no_models_available": "No hay modelos creados. Crea uno primero en 'Configurar Módulos FV'.",
-        "no_sensor_groups": "No hay grupos de sensores. Crea uno primero.",
-        "no_sensor_groups_available": "No hay grupos de sensores disponibles."
-    },
-    "abort": {
-        "already_configured": "El dispositivo ya está configurado"
     }
 }

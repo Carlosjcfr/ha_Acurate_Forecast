@@ -71,7 +71,7 @@
                 }
             },
             "pv_model_success": {
-                "title": "Operation Successful",
+                "title": "Success",
                 "description": "What do you want to do now?",
                 "menu_options": {
                     "pv_model_create": "Add Another Module",
@@ -130,16 +130,35 @@
                     "tilt": "Panel Tilt (°)",
                     "azimuth": "Panel Azimuth (180°=S)"
                 }
+            },
+            "string_edit_select": {
+                "title": "Edit String",
+                "description": "Select the string to edit.",
+                "data": {
+                    "selected_string": "Solar String"
+                }
+            },
+            "string_edit_details": {
+                "title": "Edit String",
+                "description": "Modify string geometry or model.",
+                "data": {
+                    "panel_model": "Panel Model",
+                    "num_panels": "Series Panels",
+                    "num_strings": "Parallel Strings",
+                    "tilt": "Panel Tilt (°)",
+                    "azimuth": "Panel Azimuth (180°=S)"
+                }
             }
+        },
+        "error": {
+            "unknown": "Unexpected error",
+            "no_models_available": "No models created. Create one first in 'Configure PV Modules'.",
+            "no_sensor_groups": "No sensor groups. Create one first.",
+            "no_sensor_groups_available": "No sensor groups available.",
+            "no_strings_available": "No configured strings available to edit."
+        },
+        "abort": {
+            "already_configured": "Device is already configured"
         }
-    },
-    "error": {
-        "unknown": "Unexpected error",
-        "no_models_available": "No models created. Create one first in 'Configure PV Modules'.",
-        "no_sensor_groups": "No sensor groups. Create one first.",
-        "no_sensor_groups_available": "No sensor groups available."
-    },
-    "abort": {
-        "already_configured": "Device is already configured"
     }
 }

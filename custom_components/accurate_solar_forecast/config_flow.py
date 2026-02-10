@@ -48,7 +48,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Submenú para Módulos FV."""
         return self.async_show_menu(
             step_id="menu_pv_models",
-            menu_options=["pv_model_create", "pv_model_edit_select"]
+            menu_options=["pv_model_create", "pv_model_edit_select", "pv_model_delete_select"]
         )
 
     # 1.1 CREATE PV MODEL
@@ -133,15 +133,42 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_BRAND, default=default_data.get("brand", vol.UNDEFINED)): selector.SelectSelector(
                 selector.SelectSelectorConfig(options=brands_list, custom_value=True, mode="dropdown")
             ),
-            vol.Required("p_stc", default=default_data.get("p_stc", vol.UNDEFINED)): vol.Coerce(float),
+            vol.Required("p_stc", default=default_data.get("p_stc", vol.UNDEFINED)): vol.All(vol.Coerce(float), vol.Range(min=0.1)),
             vol.Required("gamma", default=default_data.get("gamma", vol.UNDEFINED)): vol.Coerce(float),
-            vol.Required("noct", default=default_data.get("noct", vol.UNDEFINED)): vol.Coerce(float),
-            vol.Required(CONF_VOC, default=default_data.get("voc", vol.UNDEFINED)): vol.Coerce(float),
-            vol.Required(CONF_ISC, default=default_data.get("isc", vol.UNDEFINED)): vol.Coerce(float),
-            vol.Required(CONF_VMP, default=default_data.get("vmp", vol.UNDEFINED)): vol.Coerce(float),
-            vol.Required(CONF_IMP, default=default_data.get("imp", vol.UNDEFINED)): vol.Coerce(float),
+            vol.Required("noct", default=default_data.get("noct", vol.UNDEFINED)): vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
+            vol.Required(CONF_VOC, default=default_data.get("voc", vol.UNDEFINED)): vol.All(vol.Coerce(float), vol.Range(min=0.1)),
+            vol.Required(CONF_ISC, default=default_data.get("isc", vol.UNDEFINED)): vol.All(vol.Coerce(float), vol.Range(min=0.1)),
+            vol.Required(CONF_VMP, default=default_data.get("vmp", vol.UNDEFINED)): vol.All(vol.Coerce(float), vol.Range(min=0.1)),
+            vol.Required(CONF_IMP, default=default_data.get("imp", vol.UNDEFINED)): vol.All(vol.Coerce(float), vol.Range(min=0.1)),
         })
         return self.async_show_form(step_id=step_id, data_schema=schema, errors=errors)
+
+    # 1.4 DELETE PV MODEL
+    async def async_step_pv_model_delete_select(self, user_input=None):
+        if user_input is not None:
+             model_id = user_input["selected_model"]
+             if model_id == "default_450w":
+                 return self.async_abort(reason="cannot_delete_default")
+             
+             await self._db.delete_model(model_id)
+             return self.async_create_entry(title=f"Deleted Model: {model_id}", data={})
+             
+        # Filter out default model from list if valid
+        # Actually backend prevents it, but UI should also hide it or handle it?
+        # Let's filter it out from the list to be user friendly
+        models = self._db.list_models()
+        if "default_450w" in models:
+            del models["default_450w"]
+
+        if not models:
+             return self.async_abort(reason="no_models_available_to_delete")
+        
+        schema = vol.Schema({
+            vol.Required("selected_model"): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=list(models.keys()), mode="dropdown")
+            )
+        })
+        return self.async_show_form(step_id="pv_model_delete_select", data_schema=schema)
 
     # Helper: Model Selector
     def _show_model_selector(self, step_id):
@@ -303,8 +330,8 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_PANEL_MODEL): selector.SelectSelector(
                 selector.SelectSelectorConfig(options=list(models_filtered.values()), mode="dropdown")
             ),
-            vol.Required(CONF_NUM_PANELS, default=1): int,
-            vol.Required(CONF_NUM_STRINGS, default=1): int,
+            vol.Required(CONF_NUM_PANELS, default=1): vol.All(int, vol.Range(min=1)),
+            vol.Required(CONF_NUM_STRINGS, default=1): vol.All(int, vol.Range(min=1)),
             vol.Required(CONF_TILT, default=30): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
             vol.Required(CONF_AZIMUTH, default=180): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
         })
@@ -380,8 +407,8 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_PANEL_MODEL, default=default_data.get(CONF_PANEL_MODEL)): selector.SelectSelector(
                 selector.SelectSelectorConfig(options=list(models_filtered.values()), mode="dropdown")
             ),
-            vol.Required(CONF_NUM_PANELS, default=default_data.get(CONF_NUM_PANELS, 1)): int,
-            vol.Required(CONF_NUM_STRINGS, default=default_data.get(CONF_NUM_STRINGS, 1)): int,
+            vol.Required(CONF_NUM_PANELS, default=default_data.get(CONF_NUM_PANELS, 1)): vol.All(int, vol.Range(min=1)),
+            vol.Required(CONF_NUM_STRINGS, default=default_data.get(CONF_NUM_STRINGS, 1)): vol.All(int, vol.Range(min=1)),
             vol.Required(CONF_TILT, default=default_data.get(CONF_TILT, 30)): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
             vol.Required(CONF_AZIMUTH, default=default_data.get(CONF_AZIMUTH, 180)): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
         })

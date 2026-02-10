@@ -78,6 +78,13 @@
                     "pv_model_finish": "Finish & Exit"
                 }
             },
+            "pv_model_delete_select": {
+                "title": "Delete Module",
+                "description": "Select the module to delete.",
+                "data": {
+                    "selected_model": "Module to delete"
+                }
+            },
             "sensor_group_create": {
                 "title": "Create Sensor Group",
                 "description": "Define physical sensors available.",
@@ -155,7 +162,8 @@
             "no_models_available": "No models created. Create one first in 'Configure PV Modules'.",
             "no_sensor_groups": "No sensor groups. Create one first.",
             "no_sensor_groups_available": "No sensor groups available.",
-            "no_strings_available": "No configured strings available to edit."
+            "no_models_available_to_delete": "No models available to delete.",
+            "cannot_delete_default": "Cannot delete the default model."
         },
         "abort": {
             "already_configured": "Device is already configured"

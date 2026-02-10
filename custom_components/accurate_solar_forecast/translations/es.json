@@ -78,6 +78,13 @@
                     "pv_model_finish": "Finalizar y salir"
                 }
             },
+            "pv_model_delete_select": {
+                "title": "Eliminar Módulo",
+                "description": "Selecciona el módulo a eliminar.",
+                "data": {
+                    "selected_model": "Módulo a eliminar"
+                }
+            },
             "sensor_group_create": {
                 "title": "Crear Grupo de Sensores",
                 "description": "Define los sensores físicos disponibles.",
@@ -155,7 +162,8 @@
             "no_models_available": "No hay modelos creados. Crea uno primero en 'Configurar Módulos FV'.",
             "no_sensor_groups": "No hay grupos de sensores. Crea uno primero.",
             "no_sensor_groups_available": "No hay grupos de sensores disponibles.",
-            "no_strings_available": "No hay strings configurados para editar."
+            "no_models_available_to_delete": "No hay modelos que se puedan eliminar.",
+            "cannot_delete_default": "No se puede eliminar el modelo predeterminado."
         },
         "abort": {
             "already_configured": "El dispositivo ya está configurado"

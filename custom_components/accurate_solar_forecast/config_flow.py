@@ -207,8 +207,14 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # BRANCH 2: SENSOR GROUPS (Integraciones - Create & Edit Only)
     # =================================================================================
     async def async_step_menu_sensor_groups(self, user_input=None):
+        # Explicitly reload DB to ensure freshness just in case
+        if self._db:
+             await self._db.async_load()
+
         # Optimization: If no groups, go straight to creation
-        if not self._db.list_sensor_groups():
+        # We check the length explicitly to be robust
+        groups = self._db.list_sensor_groups()
+        if not groups or len(groups) == 0:
              return await self.async_step_sensor_group_create()
 
         options = ["sensor_group_create", "sensor_group_edit_select"]

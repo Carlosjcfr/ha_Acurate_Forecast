@@ -121,7 +121,11 @@ class PVDatabase:
         """Devuelve dict {id: nombre} para selectores."""
         if not self.sensor_groups or not isinstance(self.sensor_groups, dict):
             return {}
-        return {k: v[CONF_SENSOR_GROUP_NAME] for k, v in self.sensor_groups.items()}
+        return {
+            k: v[CONF_SENSOR_GROUP_NAME] 
+            for k, v in self.sensor_groups.items() 
+            if isinstance(v, dict) and v.get(CONF_SENSOR_GROUP_NAME)
+        }
     
     def delete_sensor_group(self, group_id):
         if group_id in self.sensor_groups:

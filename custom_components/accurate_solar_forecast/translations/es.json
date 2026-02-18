@@ -96,7 +96,8 @@
                     "temp_panel_sensor": "Tª del panel",
                     "wind_sensor": "Sensor de v. viento (m/s)",
                     "ref_tilt": "Inclinación sensor de irrad (º)",
-                    "ref_orientation": "Orientación sensor de irrad (180º=S)"
+                    "ref_orientation": "Orientación sensor de irrad (180º=S)",
+                    "weather_entity": "Entidad Meteorológica (para nubes)"
                 }
             },
             "sensor_group_edit_select": {
@@ -116,7 +117,8 @@
                     "temp_panel_sensor": "Tª del panel",
                     "wind_sensor": "Sensor de v. viento (m/s)",
                     "ref_tilt": "Inclinación sensor de irrad (º)",
-                    "ref_orientation": "Orientación sensor de irrad (180º=S)"
+                    "ref_orientation": "Orientación sensor de irrad (180º=S)",
+                    "weather_entity": "Entidad Meteorológica (para nubes)"
                 }
             },
             "string_create_select_brand": {
@@ -167,7 +169,8 @@
                     "temp_panel_sensor": "Tª del panel",
                     "wind_sensor": "Sensor de v. viento (m/s)",
                     "ref_tilt": "Inclinación sensor de irrad (º)",
-                    "ref_orientation": "Orientación sensor de irrad (180º=S)"
+                    "ref_orientation": "Orientación sensor de irrad (180º=S)",
+                    "weather_entity": "Entidad Meteorológica (para nubes)"
                 }
             },
             "reconfigure_string": {

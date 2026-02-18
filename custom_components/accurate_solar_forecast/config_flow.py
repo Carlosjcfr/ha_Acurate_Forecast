@@ -236,7 +236,8 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input.get(CONF_TEMP_PANEL_SENSOR),
                 user_input.get(CONF_WIND_SENSOR),
                 user_input[CONF_REF_TILT],
-                user_input[CONF_REF_ORIENTATION]
+                user_input[CONF_REF_ORIENTATION],
+                user_input.get(CONF_WEATHER_ENTITY)
             )
             # Create HA Device
             return self.async_create_entry(title=name, data=user_input)
@@ -270,7 +271,8 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input.get(CONF_TEMP_PANEL_SENSOR),
                 user_input.get(CONF_WIND_SENSOR),
                 user_input[CONF_REF_TILT],
-                user_input[CONF_REF_ORIENTATION]
+                user_input[CONF_REF_ORIENTATION],
+                user_input.get(CONF_WEATHER_ENTITY)
             )
              return self.async_create_entry(title=f"Updated Group: {name}", data={})
 
@@ -310,6 +312,9 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             vol.Optional(CONF_WIND_SENSOR, default=get_default(CONF_WIND_SENSOR)): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor", device_class="wind_speed")
+            ),
+            vol.Optional(CONF_WEATHER_ENTITY, default=get_default(CONF_WEATHER_ENTITY)): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="weather")
             ),
         })
         return self.async_show_form(step_id=step_id, data_schema=schema, errors=errors)
@@ -500,7 +505,8 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input.get(CONF_TEMP_PANEL_SENSOR),
                 user_input.get(CONF_WIND_SENSOR),
                 user_input[CONF_REF_TILT],
-                user_input[CONF_REF_ORIENTATION]
+                user_input[CONF_REF_ORIENTATION],
+                user_input.get(CONF_WEATHER_ENTITY)
              )
              
              # Update Config Entry

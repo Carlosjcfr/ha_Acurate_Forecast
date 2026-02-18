@@ -176,12 +176,62 @@ class SolarStringSensor(SensorEntity):
         cos_theta_ref = self.calculate_cos_incidence(sun_az, sun_el, ref_az, ref_tilt)
 
         # Transposición de Irradiancia
+        # Transposición de Irradiancia (Modelo Híbrido: Directa + Difusa)
+        
+        # 1. Obtener Cloud Coverage (0-100%)
+        # Intentamos obtenerlo del sensor group data (que actualiza el virtual sensor)
+        # O lo leemos directamente de la entidad weather configurada
+        weather_entity = self._sensor_group.get(CONF_WEATHER_ENTITY)
+        cloud_coverage = 0.0
+        
+        if weather_entity:
+            w_state = self.hass.states.get(weather_entity)
+            if w_state and w_state.state not in ["unavailable", "unknown"]:
+                # Caso A: Es un sensor numérico (unit %)
+                if w_state.domain == "sensor":
+                    try:
+                        cloud_coverage = float(w_state.state)
+                    except: pass
+                # Caso B: Es una entidad weather (attribute cloud_coverage)
+                elif w_state.domain == "weather":
+                    c = w_state.attributes.get("cloud_coverage")
+                    if c is not None:
+                       try:
+                           cloud_coverage = float(c)
+                       except: pass
+                    else:
+                        # Fallback: Estimar por estado texto
+                        condition = w_state.state
+                        if condition in ["sunny", "clear-night"]: cloud_coverage = 0
+                        elif condition in ["partlycloudy", "cloudy"]: cloud_coverage = 50
+                        elif condition in ["fog", "hail", "lightning", "lightning-rainy", "pouring", "rainy", "snowy", "snowy-rainy"]: cloud_coverage = 100
+        
+        # 2. Calcular Factor de Difusión (k)
+        # 0% nubes -> k=0.1 (10% difusa, 90% directa)
+        # 100% nubes -> k=0.9 (90% difusa, 10% directa)
+        # Interpolación lineal simple
+        k = 0.1 + (0.8 * (cloud_coverage / 100.0))
+        
+        # 3. Aplicar Factores
+        # Directa: Afectada por geometría
+        # Difusa: Isotrópica (simplificado, ratio ~1 o corrección leve)
+        # Para difusa, usaremos un factor simple de 1 (asumiendo que viene de todo el cielo igual)
+        # O mejor, un modelo simple de cielo isotrópico: (1 + cos(tilt_target))/2 / (1 + cos(tilt_ref))/2
+        # Pero 1.0 es suficiente para MVP.
+        
+        diffuse_factor = 1.0 
+        
         if cos_theta_ref < 0.05:
-            geometric_factor = 0 if irr_ref > 10 else 1 
+            geometric_factor = 0 # Evitar división por cero
         else:
             geometric_factor = cos_theta_target / cos_theta_ref
+            
+        # Fórmula Híbrida
+        # I_target = I_ref * [ (1-k)*Geometric + k*Diffuse ]
         
-        irr_target = irr_ref * geometric_factor
+        combined_factor = ((1 - k) * geometric_factor) + (k * diffuse_factor)
+        
+        irr_target = irr_ref * combined_factor
 
         # 5. Modelo Térmico
         noct = self._panel_data.get("noct", 45)
@@ -229,6 +279,10 @@ class SolarStringSensor(SensorEntity):
         entities = ["sun.sun", self._sensor_group.get(CONF_REF_SENSOR), self._sensor_group.get(CONF_TEMP_SENSOR)]
         if self._sensor_group.get(CONF_WIND_SENSOR):
             entities.append(self._sensor_group.get(CONF_WIND_SENSOR))
+        
+        # Track weather entity if available in group
+        if self._sensor_group.get(CONF_WEATHER_ENTITY):
+             entities.append(self._sensor_group.get(CONF_WEATHER_ENTITY))
             
         self.async_on_remove(
             async_track_state_change_event(self.hass, entities, self._update_logic)
@@ -273,6 +327,7 @@ class SensorGroupVirtualSensor(SensorEntity):
         if self._config.get(CONF_TEMP_SENSOR): sensors_to_track.append(self._config[CONF_TEMP_SENSOR])
         if self._config.get(CONF_TEMP_PANEL_SENSOR): sensors_to_track.append(self._config[CONF_TEMP_PANEL_SENSOR])
         if self._config.get(CONF_WIND_SENSOR): sensors_to_track.append(self._config[CONF_WIND_SENSOR])
+        if self._config.get(CONF_WEATHER_ENTITY): sensors_to_track.append(self._config[CONF_WEATHER_ENTITY])
         
         self.async_on_remove(
             async_track_state_change_event(self.hass, sensors_to_track, self._update_state)
@@ -310,7 +365,22 @@ class SensorGroupVirtualSensor(SensorEntity):
         s1 = get_val(CONF_REF_SENSOR, "irradiance")
         s2 = get_val(CONF_TEMP_SENSOR, "temperature")
         s3 = get_val(CONF_TEMP_PANEL_SENSOR, "panel_temperature")
+        s3 = get_val(CONF_TEMP_PANEL_SENSOR, "panel_temperature")
         s4 = get_val(CONF_WIND_SENSOR, "wind_speed")
+        
+        # Weather / Cloud Coverage Special Handling
+        w_ent = self._config.get(CONF_WEATHER_ENTITY)
+        if w_ent:
+            state_obj = self.hass.states.get(w_ent)
+            if state_obj:
+                attributes["weather_entity"] = w_ent
+                if state_obj.domain == "weather":
+                    attributes["cloud_coverage"] = state_obj.attributes.get("cloud_coverage")
+                    attributes["weather_condition"] = state_obj.state
+                else:
+                    attributes["cloud_coverage"] = state_obj.state
+            else:
+                attributes["cloud_coverage"] = "unavailable"
         
         if "Error" in [s1, s2, s3, s4]: status = "Error"
         elif "Partial" in [s1, s2, s3, s4]: status = "Partial"

@@ -16,5 +16,3 @@
 - [ ] Implementación de estructura de planificación (esta tarea)
 
 ## ✅ Done (Completado)
-
-- [ ] Mover RELEASE_NOTES a la raíz (Hecho anteriormente)

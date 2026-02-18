@@ -36,9 +36,17 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             self._db = self.hass.data[DOMAIN]["db"]
         
+        menu_options = ["menu_pv_models"]
+        
+        # Strings require a sensor group to be associated with
+        if self._db.list_sensor_groups() and len(self._db.list_sensor_groups()) > 0:
+            menu_options.append("menu_strings")
+            
+        menu_options.append("menu_sensor_groups")
+        
         return self.async_show_menu(
             step_id="user",
-            menu_options=["menu_pv_models", "menu_strings", "menu_sensor_groups"]
+            menu_options=menu_options
         )
 
     # =================================================================================
@@ -199,10 +207,11 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # BRANCH 2: SENSOR GROUPS (Integraciones - Create & Edit Only)
     # =================================================================================
     async def async_step_menu_sensor_groups(self, user_input=None):
-        options = ["sensor_group_create"]
-        if self._db.list_sensor_groups() and len(self._db.list_sensor_groups()) > 0:
-            options.append("sensor_group_edit_select")
-            
+        # Optimization: If no groups, go straight to creation
+        if not self._db.list_sensor_groups():
+             return await self.async_step_sensor_group_create()
+
+        options = ["sensor_group_create", "sensor_group_edit_select"]
         return self.async_show_menu(
             step_id="menu_sensor_groups",
             menu_options=options

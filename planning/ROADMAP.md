@@ -10,7 +10,6 @@
 
 - Soporte para múltiples inversores de forma nativa.
 - Integración visual más rica en Lovelace (tarjetas personalizadas).
-- Predicciones basadas en IA local (si aplica).
 
 ## 🌟 Largo Plazo / Vision
 

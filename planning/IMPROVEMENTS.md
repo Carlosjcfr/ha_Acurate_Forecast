@@ -31,10 +31,3 @@ Mejoras para reducir duplicidad y asegurar robustez.
 ---
 
 ### 🛠️ Hoja de Ruta de la Ejecución
-
-1. **Editar `config_flow.py`**:
-    * Borrar `async_step_pv_model_delete_select`.
-    * Borrar variables de clase sin uso (`ACTION_...`).
-    * Revisar `async_step_user` para asegurar que inicializa siempre `temp_data = {}`.
-2. **Editar Traducciones**:
-    * Limpiar claves de borrado en JSONs.

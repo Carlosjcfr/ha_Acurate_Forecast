@@ -451,3 +451,97 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_AZIMUTH, default=default_data.get(CONF_AZIMUTH, 180)): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
         })
          return self.async_show_form(step_id="string_edit_details", data_schema=schema)
+
+    # =================================================================================
+    # RECONFIGURE FLOW (Native "Configure" button support)
+    # =================================================================================
+    async def async_step_reconfigure(self, user_input=None):
+        """Handle reconfiguration of an existing entry."""
+        # Ensure DB is loaded (as async_step_user is not called here)
+        self.hass.data.setdefault(DOMAIN, {})
+        if "db" not in self.hass.data[DOMAIN]:
+            self._db = PVDatabase(self.hass)
+            await self._db.async_load()
+            self.hass.data[DOMAIN]["db"] = self._db
+        else:
+            self._db = self.hass.data[DOMAIN]["db"]
+            
+        self.reconfigure_entry = self._get_reconfigure_entry()
+        
+        if CONF_SENSOR_GROUP_NAME in self.reconfigure_entry.data:
+            return await self.async_step_reconfigure_sensor_group()
+        elif CONF_STRING_NAME in self.reconfigure_entry.data:
+            return await self.async_step_reconfigure_string()
+            
+        return self.async_abort(reason="unknown_entry_type")
+
+    async def async_step_reconfigure_sensor_group(self, user_input=None):
+        """Handle reconfiguration of a Sensor Group."""
+        if user_input is not None:
+             old_name = self.reconfigure_entry.data[CONF_SENSOR_GROUP_NAME]
+             new_name = user_input[CONF_SENSOR_GROUP_NAME]
+             
+             # Update DB
+             # If name changed, delete old DB entry (derived from old name)
+             if old_name != new_name:
+                 old_id = old_name.lower().replace(" ", "_")
+                 # We try to delete, but simple delete_sensor_group might suffice
+                 await self._db.delete_sensor_group(old_id)
+                 
+             await self._db.add_sensor_group(
+                new_name,
+                user_input[CONF_REF_SENSOR],
+                user_input[CONF_TEMP_SENSOR],
+                user_input.get(CONF_TEMP_PANEL_SENSOR),
+                user_input.get(CONF_WIND_SENSOR),
+                user_input[CONF_REF_TILT],
+                user_input[CONF_REF_ORIENTATION]
+             )
+             
+             # Update Config Entry
+             self.hass.config_entries.async_update_entry(
+                 self.reconfigure_entry, 
+                 data=user_input, 
+                 title=new_name
+             )
+             return self.async_update_reload_and_abort(self.reconfigure_entry)
+             
+        return self._show_sensor_group_form("reconfigure_sensor_group", {}, default_data=self.reconfigure_entry.data)
+
+    async def async_step_reconfigure_string(self, user_input=None):
+        """Handle reconfiguration of a String."""
+        if user_input is not None:
+             final_data = {**self.reconfigure_entry.data, **user_input}
+             # For strings, if Brand changed, we are just updating data map. 
+             # Logic is simpler as Strings don't have a separate DB entry, they rely on 'data'
+             
+             # Note: If String Name is in data, update title?
+             # User input for 'string_edit_details' does NOT include string name or brand/group selection
+             # If we want to allow editing those, we need a 2-step reconfigure or a fuller form.
+             # Based on current 'edit' logic, we just show details.
+             
+             self.hass.config_entries.async_update_entry(
+                 self.reconfigure_entry, 
+                 data=final_data
+             )
+             return self.async_update_reload_and_abort(self.reconfigure_entry)
+        
+        # Determine defaults
+        default_data = self.reconfigure_entry.data
+        brand = default_data.get(CONF_BRAND, "Generic")
+        models_filtered = self._db.list_models_by_brand(brand)
+        
+        # Reuse the schema from 'string_edit_details' logic
+        # We can't reuse _show_form easily because 'string_edit_details' builds schema inline
+        # So we duplicate the schema building here for safety and clarity
+        schema = vol.Schema({
+            vol.Required(CONF_PANEL_MODEL, default=default_data.get(CONF_PANEL_MODEL)): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=list(models_filtered.values()), mode="dropdown")
+            ),
+            vol.Required(CONF_NUM_PANELS, default=default_data.get(CONF_NUM_PANELS, 1)): vol.All(int, vol.Range(min=1)),
+            vol.Required(CONF_NUM_STRINGS, default=default_data.get(CONF_NUM_STRINGS, 1)): vol.All(int, vol.Range(min=1)),
+            vol.Required(CONF_TILT, default=default_data.get(CONF_TILT, 30)): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
+            vol.Required(CONF_AZIMUTH, default=default_data.get(CONF_AZIMUTH, 180)): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+        })
+        
+        return self.async_show_form(step_id="reconfigure_string", data_schema=schema)

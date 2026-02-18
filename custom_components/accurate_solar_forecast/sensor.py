@@ -5,6 +5,7 @@ from homeassistant.const import UnitOfPower, UnitOfTemperature, UnitOfSpeed
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .const import *
 
 _LOGGER = logging.getLogger(__name__)
@@ -14,43 +15,31 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     db = hass.data[DOMAIN]["db"] # DB is assumed to be loaded in __init__
     
     # CASE 1: SENSOR GROUP (GROUP OF SENSORS)
+    # CASE 1: SENSOR GROUP (GROUP OF SENSORS)
     if CONF_SENSOR_GROUP_NAME in config_entry.data:
-        # Create entities for this group
-        entities = []
-        name = config_entry.data[CONF_SENSOR_GROUP_NAME]
+        # Create a Virtual Link Sensor
+        # This sensor indicates status and holds attributes of all linked sensors
+        # We attempt to link it to the existing device of the Irradiance Sensor
         
-        # We need a unique ID for the device based on the config entry ID or name
-        device_id = config_entry.entry_id 
+        ref_sensor_id = config_entry.data.get(CONF_REF_SENSOR)
+        device_identifiers = None
         
-        # 1. Irradiance Proxy
-        if CONF_REF_SENSOR in config_entry.data:
-            entities.append(SensorGroupProxySensor(
-                hass, config_entry, device_id, name, "Irradiance",
-                config_entry.data[CONF_REF_SENSOR], "irradiance", "W/m²"
-            ))
-            
-        # 2. Temperature Proxy
-        if CONF_TEMP_SENSOR in config_entry.data:
-            entities.append(SensorGroupProxySensor(
-                hass, config_entry, device_id, name, "Temperature",
-                config_entry.data[CONF_TEMP_SENSOR], "temperature", "°C"
-            ))
-            
-        # 3. Panel Temp Proxy (Optional)
-        if config_entry.data.get(CONF_TEMP_PANEL_SENSOR):
-            entities.append(SensorGroupProxySensor(
-                hass, config_entry, device_id, name, "Panel Temperature",
-                config_entry.data[CONF_TEMP_PANEL_SENSOR], "temperature", "°C"
-            ))
+        if ref_sensor_id:
+            try:
+                ent_reg = er.async_get(hass)
+                dev_reg = dr.async_get(hass)
+                
+                ref_entry = ent_reg.async_get(ref_sensor_id)
+                if ref_entry and ref_entry.device_id:
+                    device = dev_reg.async_get(ref_entry.device_id)
+                    if device:
+                        device_identifiers = device.identifiers
+            except Exception as e:
+                _LOGGER.warning(f"Could not link to existing device: {e}")
 
-        # 4. Wind Proxy (Optional)
-        if config_entry.data.get(CONF_WIND_SENSOR):
-             entities.append(SensorGroupProxySensor(
-                hass, config_entry, device_id, name, "Wind Speed",
-                config_entry.data[CONF_WIND_SENSOR], "wind_speed", "m/s"
-            ))
-            
-        async_add_entities(entities)
+        async_add_entities([
+            SensorGroupVirtualSensor(hass, config_entry, device_identifiers)
+        ])
 
     # CASE 2: SOLAR STRING (POWER PREDICTION)
     elif CONF_STRING_NAME in config_entry.data:
@@ -73,45 +62,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _LOGGER.error(f"Sensor group '{group_name}' not found in DB for string {config_entry.title}")
 
 
-class SensorGroupProxySensor(SensorEntity):
-    """A sensor that mirrors the value of another sensor, grouped under a device."""
-    
-    def __init__(self, hass, config_entry, device_id, device_name, name_suffix, source_entity_id, device_class, unit):
-        self.hass = hass
-        self._source_entity_id = source_entity_id
-        self._attr_name = f"{device_name} {name_suffix}"
-        self._attr_unique_id = f"{device_id}_{name_suffix.lower().replace(' ', '_')}"
-        self._attr_device_class = device_class
-        self._attr_native_unit_of_measurement = unit
-        self._attr_state_class = SensorStateClass.MEASUREMENT
-        self._attr_should_poll = False
-        
-        # Device Info to group them together
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            name=device_name,
-            manufacturer="Accurate Solar Forecast",
-            model="Sensor Group",
-        )
 
-    async def async_added_to_hass(self):
-        """Subscribe to source entity."""
-        self.async_on_remove(
-            async_track_state_change_event(self.hass, [self._source_entity_id], self._update_state)
-        )
-        self._update_state()
-
-    @callback
-    def _update_state(self, event=None):
-        state = self.hass.states.get(self._source_entity_id)
-        if state and state.state not in ["unavailable", "unknown"]:
-            try:
-                self._attr_native_value = float(state.state)
-            except ValueError:
-                self._attr_native_value = None
-        else:
-            self._attr_native_value = None
-        self.async_write_ha_state()
 
 
 class SolarStringSensor(SensorEntity):
@@ -225,12 +176,62 @@ class SolarStringSensor(SensorEntity):
         cos_theta_ref = self.calculate_cos_incidence(sun_az, sun_el, ref_az, ref_tilt)
 
         # Transposición de Irradiancia
+        # Transposición de Irradiancia (Modelo Híbrido: Directa + Difusa)
+        
+        # 1. Obtener Cloud Coverage (0-100%)
+        # Intentamos obtenerlo del sensor group data (que actualiza el virtual sensor)
+        # O lo leemos directamente de la entidad weather configurada
+        weather_entity = self._sensor_group.get(CONF_WEATHER_ENTITY)
+        cloud_coverage = 0.0
+        
+        if weather_entity:
+            w_state = self.hass.states.get(weather_entity)
+            if w_state and w_state.state not in ["unavailable", "unknown"]:
+                # Caso A: Es un sensor numérico (unit %)
+                if w_state.domain == "sensor":
+                    try:
+                        cloud_coverage = float(w_state.state)
+                    except: pass
+                # Caso B: Es una entidad weather (attribute cloud_coverage)
+                elif w_state.domain == "weather":
+                    c = w_state.attributes.get("cloud_coverage")
+                    if c is not None:
+                       try:
+                           cloud_coverage = float(c)
+                       except: pass
+                    else:
+                        # Fallback: Estimar por estado texto
+                        condition = w_state.state
+                        if condition in ["sunny", "clear-night"]: cloud_coverage = 0
+                        elif condition in ["partlycloudy", "cloudy"]: cloud_coverage = 50
+                        elif condition in ["fog", "hail", "lightning", "lightning-rainy", "pouring", "rainy", "snowy", "snowy-rainy"]: cloud_coverage = 100
+        
+        # 2. Calcular Factor de Difusión (k)
+        # 0% nubes -> k=0.1 (10% difusa, 90% directa)
+        # 100% nubes -> k=0.9 (90% difusa, 10% directa)
+        # Interpolación lineal simple
+        k = 0.1 + (0.8 * (cloud_coverage / 100.0))
+        
+        # 3. Aplicar Factores
+        # Directa: Afectada por geometría
+        # Difusa: Isotrópica (simplificado, ratio ~1 o corrección leve)
+        # Para difusa, usaremos un factor simple de 1 (asumiendo que viene de todo el cielo igual)
+        # O mejor, un modelo simple de cielo isotrópico: (1 + cos(tilt_target))/2 / (1 + cos(tilt_ref))/2
+        # Pero 1.0 es suficiente para MVP.
+        
+        diffuse_factor = 1.0 
+        
         if cos_theta_ref < 0.05:
-            geometric_factor = 0 if irr_ref > 10 else 1 
+            geometric_factor = 0 # Evitar división por cero
         else:
             geometric_factor = cos_theta_target / cos_theta_ref
+            
+        # Fórmula Híbrida
+        # I_target = I_ref * [ (1-k)*Geometric + k*Diffuse ]
         
-        irr_target = irr_ref * geometric_factor
+        combined_factor = ((1 - k) * geometric_factor) + (k * diffuse_factor)
+        
+        irr_target = irr_ref * combined_factor
 
         # 5. Modelo Térmico
         noct = self._panel_data.get("noct", 45)
@@ -278,8 +279,120 @@ class SolarStringSensor(SensorEntity):
         entities = ["sun.sun", self._sensor_group.get(CONF_REF_SENSOR), self._sensor_group.get(CONF_TEMP_SENSOR)]
         if self._sensor_group.get(CONF_WIND_SENSOR):
             entities.append(self._sensor_group.get(CONF_WIND_SENSOR))
+        
+        # Track weather entity if available in group
+        if self._sensor_group.get(CONF_WEATHER_ENTITY):
+             entities.append(self._sensor_group.get(CONF_WEATHER_ENTITY))
             
         self.async_on_remove(
             async_track_state_change_event(self.hass, entities, self._update_logic)
         )
-        self._update_logic()
+
+class SensorGroupVirtualSensor(SensorEntity):
+    """A virtual sensor that represents the health and data of a Sensor Group."""
+    
+    def __init__(self, hass, config_entry, target_device_identifiers=None):
+        self.hass = hass
+        self._config = config_entry.data
+        self._name = self._config.get(CONF_SENSOR_GROUP_NAME)
+        
+        # Identity
+        self._attr_name = self._name
+        self._attr_unique_id = f"sg_{self._name.lower().replace(' ', '_')}_status"
+        self._attr_native_unit_of_measurement = None
+        self._attr_device_class = None # Status text
+        self._attr_icon = "mdi:link-variant"
+        self._attr_should_poll = False
+        
+        # Determine Device Info
+        if target_device_identifiers:
+            # Link to existing device (e.g., Weather Station)
+            self._attr_device_info = DeviceInfo(
+                identifiers=target_device_identifiers
+            )
+        else:
+            # Fallback: Create own device
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, config_entry.entry_id)},
+                name=self._name,
+                manufacturer="Accurate Solar Forecast",
+                model="Sensor Group",
+                entry_type=dr.DeviceEntryType.SERVICE
+            )
+
+    async def async_added_to_hass(self):
+        """Subscribe to all linked sensors."""
+        sensors_to_track = []
+        if self._config.get(CONF_REF_SENSOR): sensors_to_track.append(self._config[CONF_REF_SENSOR])
+        if self._config.get(CONF_TEMP_SENSOR): sensors_to_track.append(self._config[CONF_TEMP_SENSOR])
+        if self._config.get(CONF_TEMP_PANEL_SENSOR): sensors_to_track.append(self._config[CONF_TEMP_PANEL_SENSOR])
+        if self._config.get(CONF_WIND_SENSOR): sensors_to_track.append(self._config[CONF_WIND_SENSOR])
+        if self._config.get(CONF_WEATHER_ENTITY): sensors_to_track.append(self._config[CONF_WEATHER_ENTITY])
+        
+        self.async_on_remove(
+            async_track_state_change_event(self.hass, sensors_to_track, self._update_state)
+        )
+        self._update_state()
+
+    @callback
+    def _update_state(self, event=None):
+        """Update state and attributes based on linked sensors."""
+        
+        attributes = {}
+        status = "OK"
+        
+        # Helper to get state
+        def get_val(key, attr_name):
+            entity_id = self._config.get(key)
+            if not entity_id:
+                return
+            
+            state_obj = self.hass.states.get(entity_id)
+            if state_obj:
+                attributes[attr_name] = state_obj.state
+                attributes[f"{attr_name}_unit"] = state_obj.attributes.get("unit_of_measurement")
+                
+                if state_obj.state in ["unavailable", "unknown"]:
+                    # Modify outer scope status if we were using a class, but here we can't easily.
+                    # Simple approach: Return status flag
+                    return "Partial"
+            else:
+                attributes[attr_name] = "unavailable"
+                return "Error"
+            return "OK"
+
+        # Fetch values for attributes
+        s1 = get_val(CONF_REF_SENSOR, "irradiance")
+        s2 = get_val(CONF_TEMP_SENSOR, "temperature")
+        s3 = get_val(CONF_TEMP_PANEL_SENSOR, "panel_temperature")
+        s3 = get_val(CONF_TEMP_PANEL_SENSOR, "panel_temperature")
+        s4 = get_val(CONF_WIND_SENSOR, "wind_speed")
+        
+        # Weather / Cloud Coverage Special Handling
+        w_ent = self._config.get(CONF_WEATHER_ENTITY)
+        if w_ent:
+            state_obj = self.hass.states.get(w_ent)
+            if state_obj:
+                attributes["weather_entity"] = w_ent
+                if state_obj.domain == "weather":
+                    attributes["cloud_coverage"] = state_obj.attributes.get("cloud_coverage")
+                    attributes["weather_condition"] = state_obj.state
+                else:
+                    attributes["cloud_coverage"] = state_obj.state
+            else:
+                attributes["cloud_coverage"] = "unavailable"
+        
+        if "Error" in [s1, s2, s3, s4]: status = "Error"
+        elif "Partial" in [s1, s2, s3, s4]: status = "Partial"
+        
+        # Store configuration in attributes too
+        attributes["ref_tilt"] = self._config.get(CONF_REF_TILT)
+        attributes["ref_orientation"] = self._config.get(CONF_REF_ORIENTATION)
+        
+        # Check critical sensor
+        if attributes.get("irradiance") in ["unavailable", "unknown", None]:
+            status = "Unavailable"
+            
+        self._attr_native_value = status
+        self._attr_extra_state_attributes = attributes
+        self.async_write_ha_state()

@@ -96,7 +96,8 @@
                     "temp_panel_sensor": "Tª del panel",
                     "wind_sensor": "Sensor de v. viento (m/s)",
                     "ref_tilt": "Inclinación sensor de irrad (º)",
-                    "ref_orientation": "Orientación sensor de irrad (180º=S)"
+                    "ref_orientation": "Orientación sensor de irrad (180º=S)",
+                    "weather_entity": "Entidad Meteorológica (para nubes)"
                 }
             },
             "sensor_group_edit_select": {
@@ -116,7 +117,8 @@
                     "temp_panel_sensor": "Tª del panel",
                     "wind_sensor": "Sensor de v. viento (m/s)",
                     "ref_tilt": "Inclinación sensor de irrad (º)",
-                    "ref_orientation": "Orientación sensor de irrad (180º=S)"
+                    "ref_orientation": "Orientación sensor de irrad (180º=S)",
+                    "weather_entity": "Entidad Meteorológica (para nubes)"
                 }
             },
             "string_create_select_brand": {
@@ -156,6 +158,31 @@
                     "tilt": "Inclinación Paneles (º)",
                     "azimuth": "Orientación Paneles (180º=S)"
                 }
+            },
+            "reconfigure_sensor_group": {
+                "title": "Reconfigurar Grupo de Sensores",
+                "description": "Modifica la configuración del grupo.",
+                "data": {
+                    "sensor_group_name": "Nombre del Grupo",
+                    "irradiance_sensor": "Irradiancia",
+                    "temperature_sensor": "Tª Ambiental",
+                    "temp_panel_sensor": "Tª del panel",
+                    "wind_sensor": "Sensor de v. viento (m/s)",
+                    "ref_tilt": "Inclinación sensor de irrad (º)",
+                    "ref_orientation": "Orientación sensor de irrad (180º=S)",
+                    "weather_entity": "Entidad Meteorológica (para nubes)"
+                }
+            },
+            "reconfigure_string": {
+                "title": "Reconfigurar String",
+                "description": "Modifica la geometría o el modelo del string.",
+                "data": {
+                    "panel_model": "Modelo de Panel",
+                    "num_panels": "Paneles en serie",
+                    "num_strings": "Series en paralelo",
+                    "tilt": "Inclinación Paneles (º)",
+                    "azimuth": "Orientación Paneles (180º=S)"
+                }
             }
         },
         "error": {
@@ -168,7 +195,8 @@
         },
         "abort": {
             "already_configured": "El dispositivo ya está configurado",
-            "pv_models_saved": "Listado de módulos actualizados!"
+            "pv_models_saved": "Listado de módulos actualizados!",
+            "reconfigure_successful": "¡Configuración actualizada con éxito!"
         }
     }
 }

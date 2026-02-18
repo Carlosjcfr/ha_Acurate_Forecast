@@ -96,7 +96,8 @@
                     "temp_panel_sensor": "Panel Temp",
                     "wind_sensor": "Wind Speed (m/s)",
                     "ref_tilt": "Irrad. Sensor Tilt (°)",
-                    "ref_orientation": "Irrad. Sensor Orientation (180°=S)"
+                    "ref_orientation": "Irrad. Sensor Orientation (180°=S)",
+                    "weather_entity": "Weather Forecast (Cloud Coverage)"
                 }
             },
             "sensor_group_edit_select": {
@@ -116,7 +117,8 @@
                     "temp_panel_sensor": "Panel Temp",
                     "wind_sensor": "Wind Speed (m/s)",
                     "ref_tilt": "Irrad. Sensor Tilt (°)",
-                    "ref_orientation": "Irrad. Sensor Orientation (180°=S)"
+                    "ref_orientation": "Irrad. Sensor Orientation (180°=S)",
+                    "weather_entity": "Weather Forecast (Cloud Coverage)"
                 }
             },
             "string_create_select_brand": {
@@ -156,6 +158,31 @@
                     "tilt": "Panel Tilt (°)",
                     "azimuth": "Panel Azimuth (180°=S)"
                 }
+            },
+            "reconfigure_sensor_group": {
+                "title": "Reconfigure Sensor Group",
+                "description": "Modify group configuration.",
+                "data": {
+                    "sensor_group_name": "Group Name",
+                    "irradiance_sensor": "Irradiance",
+                    "temperature_sensor": "Ambient Temp",
+                    "temp_panel_sensor": "Panel Temp",
+                    "wind_sensor": "Wind Speed (m/s)",
+                    "ref_tilt": "Irrad. Sensor Tilt (°)",
+                    "ref_orientation": "Irrad. Sensor Orientation (180°=S)",
+                    "weather_entity": "Weather Forecast (Cloud Coverage)"
+                }
+            },
+            "reconfigure_string": {
+                "title": "Reconfigure String",
+                "description": "Modify string geometry or model.",
+                "data": {
+                    "panel_model": "Panel Model",
+                    "num_panels": "Series Panels",
+                    "num_strings": "Parallel Strings",
+                    "tilt": "Panel Tilt (°)",
+                    "azimuth": "Panel Azimuth (180°=S)"
+                }
             }
         },
         "error": {
@@ -168,7 +195,8 @@
         },
         "abort": {
             "already_configured": "Device is already configured",
-            "pv_models_saved": "PV Modules list updated!"
+            "pv_models_saved": "PV Modules list updated!",
+            "reconfigure_successful": "Configuration successfully updated!"
         }
     }
 }

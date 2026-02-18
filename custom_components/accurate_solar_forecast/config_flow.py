@@ -290,20 +290,25 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 valid_irradiance_sensors.append(state.entity_id)
         valid_irradiance_sensors.sort()
 
+        # Prepare defaults, handling None values correctly by converting to vol.UNDEFINED
+        def get_default(key, fallback=vol.UNDEFINED):
+            val = default_data.get(key)
+            return val if val is not None else fallback
+
         schema = vol.Schema({
-            vol.Required(CONF_SENSOR_GROUP_NAME, default=default_data.get(CONF_SENSOR_GROUP_NAME, "")): str,
-            vol.Required(CONF_REF_SENSOR, default=default_data.get(CONF_REF_SENSOR, vol.UNDEFINED)): selector.EntitySelector(
+            vol.Required(CONF_SENSOR_GROUP_NAME, default=get_default(CONF_SENSOR_GROUP_NAME, "")): str,
+            vol.Required(CONF_REF_SENSOR, default=get_default(CONF_REF_SENSOR)): selector.EntitySelector(
                 selector.EntitySelectorConfig(include_entities=valid_irradiance_sensors)
             ),
-            vol.Required(CONF_REF_TILT, default=default_data.get(CONF_REF_TILT, 0)): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
-            vol.Required(CONF_REF_ORIENTATION, default=default_data.get(CONF_REF_ORIENTATION, 180)): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
-            vol.Required(CONF_TEMP_SENSOR, default=default_data.get(CONF_TEMP_SENSOR, vol.UNDEFINED)): selector.EntitySelector(
+            vol.Required(CONF_REF_TILT, default=get_default(CONF_REF_TILT, 0)): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
+            vol.Required(CONF_REF_ORIENTATION, default=get_default(CONF_REF_ORIENTATION, 180)): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+            vol.Required(CONF_TEMP_SENSOR, default=get_default(CONF_TEMP_SENSOR)): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor", device_class="temperature")
             ),
-            vol.Optional(CONF_TEMP_PANEL_SENSOR, default=default_data.get(CONF_TEMP_PANEL_SENSOR, vol.UNDEFINED)): selector.EntitySelector(
+            vol.Optional(CONF_TEMP_PANEL_SENSOR, default=get_default(CONF_TEMP_PANEL_SENSOR)): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor", device_class="temperature")
             ),
-            vol.Optional(CONF_WIND_SENSOR, default=default_data.get(CONF_WIND_SENSOR, vol.UNDEFINED)): selector.EntitySelector(
+            vol.Optional(CONF_WIND_SENSOR, default=get_default(CONF_WIND_SENSOR)): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor", device_class="wind_speed")
             ),
         })

@@ -97,7 +97,7 @@
                     "wind_sensor": "Wind Speed (m/s)",
                     "ref_tilt": "Irrad. Sensor Tilt (°)",
                     "ref_orientation": "Irrad. Sensor Orientation (180°=S)",
-                    "weather_entity": "Weather Forecast (Cloud Coverage)"
+                    "weather_entity": "Weather forecast"
                 }
             },
             "sensor_group_edit_select": {
@@ -118,7 +118,7 @@
                     "wind_sensor": "Wind Speed (m/s)",
                     "ref_tilt": "Irrad. Sensor Tilt (°)",
                     "ref_orientation": "Irrad. Sensor Orientation (180°=S)",
-                    "weather_entity": "Weather Forecast (Cloud Coverage)"
+                    "weather_entity": "Weather forecast"
                 }
             },
             "string_create_select_brand": {
@@ -170,7 +170,7 @@
                     "wind_sensor": "Wind Speed (m/s)",
                     "ref_tilt": "Irrad. Sensor Tilt (°)",
                     "ref_orientation": "Irrad. Sensor Orientation (180°=S)",
-                    "weather_entity": "Weather Forecast (Cloud Coverage)"
+                    "weather_entity": "Weather forecast"
                 }
             },
             "reconfigure_string": {

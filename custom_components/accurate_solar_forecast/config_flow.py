@@ -299,6 +299,9 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema = vol.Schema({
             vol.Required(CONF_SENSOR_GROUP_NAME, default=get_default(CONF_SENSOR_GROUP_NAME, "")): str,
+            vol.Optional(CONF_WEATHER_ENTITY, default=get_default(CONF_WEATHER_ENTITY)): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="weather")
+            ),
             vol.Required(CONF_REF_SENSOR, default=get_default(CONF_REF_SENSOR)): selector.EntitySelector(
                 selector.EntitySelectorConfig(include_entities=valid_irradiance_sensors)
             ),
@@ -312,9 +315,6 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             vol.Optional(CONF_WIND_SENSOR, default=get_default(CONF_WIND_SENSOR)): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor", device_class="wind_speed")
-            ),
-            vol.Optional(CONF_WEATHER_ENTITY, default=get_default(CONF_WEATHER_ENTITY)): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain="weather")
             ),
         })
         return self.async_show_form(step_id=step_id, data_schema=schema, errors=errors)

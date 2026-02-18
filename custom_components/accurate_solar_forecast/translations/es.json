@@ -97,7 +97,7 @@
                     "wind_sensor": "Sensor de v. viento (m/s)",
                     "ref_tilt": "Inclinación sensor de irrad (º)",
                     "ref_orientation": "Orientación sensor de irrad (180º=S)",
-                    "weather_entity": "Entidad Meteorológica (para nubes)"
+                    "weather_entity": "Pronostico del tiempo"
                 }
             },
             "sensor_group_edit_select": {
@@ -118,7 +118,7 @@
                     "wind_sensor": "Sensor de v. viento (m/s)",
                     "ref_tilt": "Inclinación sensor de irrad (º)",
                     "ref_orientation": "Orientación sensor de irrad (180º=S)",
-                    "weather_entity": "Entidad Meteorológica (para nubes)"
+                    "weather_entity": "Pronostico del tiempo"
                 }
             },
             "string_create_select_brand": {
@@ -170,7 +170,7 @@
                     "wind_sensor": "Sensor de v. viento (m/s)",
                     "ref_tilt": "Inclinación sensor de irrad (º)",
                     "ref_orientation": "Orientación sensor de irrad (180º=S)",
-                    "weather_entity": "Entidad Meteorológica (para nubes)"
+                    "weather_entity": "Pronostico del tiempo"
                 }
             },
             "reconfigure_string": {

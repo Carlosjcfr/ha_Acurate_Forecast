@@ -20,6 +20,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Branch 1: PV Models
         # Branch 2: Strings
         # Branch 3: Sensor Groups
+        # Branch 4: Orientations
         
     async def async_step_user(self, user_input=None):
         """Menú Principal: ¿Qué quieres gestionar?"""
@@ -43,6 +44,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             menu_options.append("menu_strings")
             
         menu_options.append("menu_sensor_groups")
+        menu_options.append("menu_orientations")
         
         return self.async_show_menu(
             step_id="user",
@@ -54,17 +56,12 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # =================================================================================
     async def async_step_menu_pv_models(self, user_input=None):
         """Submenú para Módulos FV."""
+        self.temp_data = {}
         options = ["pv_model_create"]
         
         models = self._db.list_models()
         if models and len(models) > 0:
              options.append("pv_model_edit_select")
-             
-             # Check if there are models other than default to allow delete
-             # Assuming 'default_450w' is the key for the default model
-             deletable_models = [k for k in models.keys() if k != "default_450w"]
-             if len(deletable_models) > 0:
-                options.append("pv_model_delete_select")
              
         return self.async_show_menu(
             step_id="menu_pv_models",
@@ -163,32 +160,6 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
         })
         return self.async_show_form(step_id=step_id, data_schema=schema, errors=errors)
 
-    # 1.4 DELETE PV MODEL
-    async def async_step_pv_model_delete_select(self, user_input=None):
-        if user_input is not None:
-             model_id = user_input["selected_model"]
-             if model_id == "default_450w":
-                 return self.async_abort(reason="cannot_delete_default")
-             
-             await self._db.delete_model(model_id)
-             return self.async_create_entry(title=f"Deleted Model: {model_id}", data={})
-             
-        # Filter out default model from list if valid
-        # Actually backend prevents it, but UI should also hide it or handle it?
-        # Let's filter it out from the list to be user friendly
-        models = self._db.list_models()
-        if "default_450w" in models:
-            del models["default_450w"]
-
-        if not models:
-             return self.async_abort(reason="no_models_available_to_delete")
-        
-        schema = vol.Schema({
-            vol.Required("selected_model"): selector.SelectSelector(
-                selector.SelectSelectorConfig(options=list(models.keys()), mode="dropdown")
-            )
-        })
-        return self.async_show_form(step_id="pv_model_delete_select", data_schema=schema)
 
     # Helper: Model Selector
     def _show_model_selector(self, step_id):
@@ -207,6 +178,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # BRANCH 2: SENSOR GROUPS (Integraciones - Create & Edit Only)
     # =================================================================================
     async def async_step_menu_sensor_groups(self, user_input=None):
+        self.temp_data = {}
         # Explicitly reload DB to ensure freshness just in case
         if self._db:
              await self._db.async_load()
@@ -235,8 +207,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_TEMP_SENSOR],
                 user_input.get(CONF_TEMP_PANEL_SENSOR),
                 user_input.get(CONF_WIND_SENSOR),
-                user_input[CONF_REF_TILT],
-                user_input[CONF_REF_ORIENTATION],
+                user_input[CONF_ORIENTATION_ID],
                 user_input.get(CONF_WEATHER_ENTITY)
             )
             # Create HA Device
@@ -270,8 +241,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_TEMP_SENSOR],
                 user_input.get(CONF_TEMP_PANEL_SENSOR),
                 user_input.get(CONF_WIND_SENSOR),
-                user_input[CONF_REF_TILT],
-                user_input[CONF_REF_ORIENTATION],
+                user_input[CONF_ORIENTATION_ID],
                 user_input.get(CONF_WEATHER_ENTITY)
             )
              return self.async_create_entry(title=f"Updated Group: {name}", data={})
@@ -297,6 +267,8 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             val = default_data.get(key)
             return val if val is not None else fallback
 
+        orientations = self._db.list_orientations()
+
         schema = vol.Schema({
             vol.Required(CONF_SENSOR_GROUP_NAME, default=get_default(CONF_SENSOR_GROUP_NAME, "")): str,
             vol.Optional(CONF_WEATHER_ENTITY, default=get_default(CONF_WEATHER_ENTITY)): selector.EntitySelector(
@@ -305,8 +277,9 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_REF_SENSOR, default=get_default(CONF_REF_SENSOR)): selector.EntitySelector(
                 selector.EntitySelectorConfig(include_entities=valid_irradiance_sensors)
             ),
-            vol.Required(CONF_REF_TILT, default=get_default(CONF_REF_TILT, 0)): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
-            vol.Required(CONF_REF_ORIENTATION, default=get_default(CONF_REF_ORIENTATION, 180)): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+            vol.Required(CONF_ORIENTATION_ID, default=get_default(CONF_ORIENTATION_ID)): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=list(orientations.keys()), mode="dropdown")
+            ),
             vol.Required(CONF_TEMP_SENSOR, default=get_default(CONF_TEMP_SENSOR)): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor", device_class="temperature")
             ),
@@ -323,6 +296,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # BRANCH 3: STRINGS (Integraciones - Create & Edit Only)
     # =================================================================================
     async def async_step_menu_strings(self, user_input=None):
+        self.temp_data = {}
         options = ["string_create_select_brand"]
         
         # Check if there are any strings created
@@ -374,14 +348,19 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
         selected_brand = self.temp_data[CONF_BRAND]
         models_filtered = self._db.list_models_by_brand(selected_brand)
         
+        orientations = self._db.list_orientations()
+        if not orientations:
+             return self.async_abort(reason="no_orientations_available")
+
         schema = vol.Schema({
             vol.Required(CONF_PANEL_MODEL): selector.SelectSelector(
                 selector.SelectSelectorConfig(options=list(models_filtered.values()), mode="dropdown")
             ),
             vol.Required(CONF_NUM_PANELS, default=1): vol.All(int, vol.Range(min=1)),
             vol.Required(CONF_NUM_STRINGS, default=1): vol.All(int, vol.Range(min=1)),
-            vol.Required(CONF_TILT, default=30): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
-            vol.Required(CONF_AZIMUTH, default=180): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+            vol.Required(CONF_ORIENTATION_ID): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=list(orientations.keys()), mode="dropdown")
+            ),
         })
         return self.async_show_form(step_id="string_create_details", data_schema=schema)
 
@@ -451,14 +430,17 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
          brand = default_data.get(CONF_BRAND, "Generic")
          models_filtered = self._db.list_models_by_brand(brand)
          
+         orientations = self._db.list_orientations()
+         
          schema = vol.Schema({
             vol.Required(CONF_PANEL_MODEL, default=default_data.get(CONF_PANEL_MODEL)): selector.SelectSelector(
                 selector.SelectSelectorConfig(options=list(models_filtered.values()), mode="dropdown")
             ),
             vol.Required(CONF_NUM_PANELS, default=default_data.get(CONF_NUM_PANELS, 1)): vol.All(int, vol.Range(min=1)),
             vol.Required(CONF_NUM_STRINGS, default=default_data.get(CONF_NUM_STRINGS, 1)): vol.All(int, vol.Range(min=1)),
-            vol.Required(CONF_TILT, default=default_data.get(CONF_TILT, 30)): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
-            vol.Required(CONF_AZIMUTH, default=default_data.get(CONF_AZIMUTH, 180)): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+            vol.Required(CONF_ORIENTATION_ID, default=default_data.get(CONF_ORIENTATION_ID)): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=list(orientations.keys()), mode="dropdown")
+            ),
         })
          return self.async_show_form(step_id="string_edit_details", data_schema=schema)
 
@@ -504,8 +486,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_TEMP_SENSOR],
                 user_input.get(CONF_TEMP_PANEL_SENSOR),
                 user_input.get(CONF_WIND_SENSOR),
-                user_input[CONF_REF_TILT],
-                user_input[CONF_REF_ORIENTATION],
+                user_input[CONF_ORIENTATION_ID],
                 user_input.get(CONF_WEATHER_ENTITY)
              )
              
@@ -542,6 +523,8 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
         brand = default_data.get(CONF_BRAND, "Generic")
         models_filtered = self._db.list_models_by_brand(brand)
         
+        orientations = self._db.list_orientations()
+        
         # Reuse the schema from 'string_edit_details' logic
         # We can't reuse _show_form easily because 'string_edit_details' builds schema inline
         # So we duplicate the schema building here for safety and clarity
@@ -551,8 +534,92 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             vol.Required(CONF_NUM_PANELS, default=default_data.get(CONF_NUM_PANELS, 1)): vol.All(int, vol.Range(min=1)),
             vol.Required(CONF_NUM_STRINGS, default=default_data.get(CONF_NUM_STRINGS, 1)): vol.All(int, vol.Range(min=1)),
-            vol.Required(CONF_TILT, default=default_data.get(CONF_TILT, 30)): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
-            vol.Required(CONF_AZIMUTH, default=default_data.get(CONF_AZIMUTH, 180)): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+            vol.Required(CONF_ORIENTATION_ID, default=default_data.get(CONF_ORIENTATION_ID)): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=list(orientations.keys()), mode="dropdown")
+            ),
         })
         
         return self.async_show_form(step_id="reconfigure_string", data_schema=schema)
+
+    # =================================================================================
+    # BRANCH 4: ORIENTATIONS (Catálogo de Geometrías - Create, Edit, Delete)
+    # =================================================================================
+    async def async_step_menu_orientations(self, user_input=None):
+        """Submenú para Orientaciones."""
+        self.temp_data = {}
+        options = ["orientation_create"]
+        
+        orientations = self._db.list_orientations()
+        if orientations and len(orientations) > 0:
+             options.append("orientation_edit_select")
+             options.append("orientation_delete_select")
+             
+        return self.async_show_menu(
+            step_id="menu_orientations",
+            menu_options=options
+        )
+
+    # 4.1 CREATE ORIENTATION
+    async def async_step_orientation_create(self, user_input=None):
+        """Crear una nueva orientación."""
+        errors = {}
+        if user_input is not None:
+            await self._db.add_orientation(
+                user_input[CONF_ORIENTATION_NAME],
+                user_input[CONF_TILT],
+                user_input[CONF_AZIMUTH]
+            )
+            return self.async_abort(reason="orientation_saved")
+
+        return self._show_orientation_form("orientation_create", errors)
+
+    # 4.2 EDIT ORIENTATION
+    async def async_step_orientation_edit_select(self, user_input=None):
+        if user_input is not None:
+             self.selected_item_id = user_input["selected_orientation"]
+             return await self.async_step_orientation_edit_form()
+
+        orientations = self._db.list_orientations()
+        schema = vol.Schema({
+            vol.Required("selected_orientation"): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=list(orientations.keys()), mode="dropdown")
+            )
+        })
+        return self.async_show_form(step_id="orientation_edit_select", data_schema=schema)
+
+    async def async_step_orientation_edit_form(self, user_input=None):
+        if user_input is not None:
+            await self._db.add_orientation(
+                user_input[CONF_ORIENTATION_NAME],
+                user_input[CONF_TILT],
+                user_input[CONF_AZIMUTH]
+            )
+            return self.async_abort(reason="orientation_saved")
+
+        orientation_data = self._db.get_orientation(self.selected_item_id)
+        return self._show_orientation_form("orientation_edit_form", {}, default_data=orientation_data)
+
+    # 4.3 DELETE ORIENTATION
+    async def async_step_orientation_delete_select(self, user_input=None):
+        if user_input is not None:
+             await self._db.delete_orientation(user_input["selected_orientation"])
+             return self.async_abort(reason="orientation_deleted")
+
+        orientations = self._db.list_orientations()
+        schema = vol.Schema({
+            vol.Required("selected_orientation"): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=list(orientations.keys()), mode="dropdown")
+            )
+        })
+        return self.async_show_form(step_id="orientation_delete_select", data_schema=schema)
+
+    # Helper: Orientation Form
+    def _show_orientation_form(self, step_id, errors, default_data=None):
+        if default_data is None: default_data = {}
+        
+        schema = vol.Schema({
+            vol.Required(CONF_ORIENTATION_NAME, default=default_data.get(CONF_ORIENTATION_NAME, vol.UNDEFINED)): str,
+            vol.Required(CONF_TILT, default=default_data.get(CONF_TILT, 30)): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
+            vol.Required(CONF_AZIMUTH, default=default_data.get(CONF_AZIMUTH, 180)): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+        })
+        return self.async_show_form(step_id=step_id, data_schema=schema, errors=errors)

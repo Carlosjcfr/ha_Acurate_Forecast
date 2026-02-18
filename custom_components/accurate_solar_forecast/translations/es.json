@@ -7,7 +7,8 @@
                 "menu_options": {
                     "menu_pv_models": "Configurar Módulos Fotovoltaicos",
                     "menu_strings": "Configurar Strings",
-                    "menu_sensor_groups": "Configurar Sensores"
+                    "menu_sensor_groups": "Configurar Sensores",
+                    "menu_orientations": "Gestionar Orientaciones"
                 }
             },
             "menu_pv_models": {
@@ -32,6 +33,15 @@
                 "menu_options": {
                     "sensor_group_create": "Crear grupo",
                     "sensor_group_edit_select": "Editar grupo"
+                }
+            },
+            "menu_orientations": {
+                "title": "Acciones",
+                "description": "Catálogo de orientaciones (geometrías).",
+                "menu_options": {
+                    "orientation_create": "Crear Orientación",
+                    "orientation_edit_select": "Editar Orientación",
+                    "orientation_delete_select": "Eliminar Orientación"
                 }
             },
             "pv_model_create": {
@@ -79,25 +89,17 @@
                     "pv_model_finish": "Finalizar y salir"
                 }
             },
-            "pv_model_delete_select": {
-                "title": "Eliminar Módulo",
-                "description": "Selecciona el módulo a eliminar.",
-                "data": {
-                    "selected_model": "Módulo a eliminar"
-                }
-            },
             "sensor_group_create": {
                 "title": "Crear Grupo de Sensores",
                 "description": "Define los sensores físicos disponibles.",
                 "data": {
                     "sensor_group_name": "Nombre del Grupo",
+                    "weather_entity": "Pronóstico del tiempo",
                     "irradiance_sensor": "Irradiancia",
                     "temperature_sensor": "Tª Ambiental",
                     "temp_panel_sensor": "Tª del panel",
                     "wind_sensor": "Sensor de v. viento (m/s)",
-                    "ref_tilt": "Inclinación sensor de irrad (º)",
-                    "ref_orientation": "Orientación sensor de irrad (180º=S)",
-                    "weather_entity": "Pronostico del tiempo"
+                    "orientation_id": "Orientación/Geometría"
                 }
             },
             "sensor_group_edit_select": {
@@ -112,13 +114,12 @@
                 "description": "Modifica la configuración del grupo.",
                 "data": {
                     "sensor_group_name": "Nombre del Grupo",
+                    "weather_entity": "Pronóstico del tiempo",
                     "irradiance_sensor": "Irradiancia",
                     "temperature_sensor": "Tª Ambiental",
                     "temp_panel_sensor": "Tª del panel",
                     "wind_sensor": "Sensor de v. viento (m/s)",
-                    "ref_tilt": "Inclinación sensor de irrad (º)",
-                    "ref_orientation": "Orientación sensor de irrad (180º=S)",
-                    "weather_entity": "Pronostico del tiempo"
+                    "orientation_id": "Orientación/Geometría"
                 }
             },
             "string_create_select_brand": {
@@ -137,8 +138,7 @@
                     "panel_model": "Modelo de Panel",
                     "num_panels": "Paneles en serie",
                     "num_strings": "Series en paralelo",
-                    "tilt": "Inclinación Paneles (º)",
-                    "azimuth": "Orientación Paneles (180º=S)"
+                    "orientation_id": "Orientación/Geometría"
                 }
             },
             "string_edit_select": {
@@ -155,8 +155,7 @@
                     "panel_model": "Modelo de Panel",
                     "num_panels": "Paneles en serie",
                     "num_strings": "Series en paralelo",
-                    "tilt": "Inclinación Paneles (º)",
-                    "azimuth": "Orientación Paneles (180º=S)"
+                    "orientation_id": "Orientación/Geometría"
                 }
             },
             "reconfigure_sensor_group": {
@@ -164,13 +163,12 @@
                 "description": "Modifica la configuración del grupo.",
                 "data": {
                     "sensor_group_name": "Nombre del Grupo",
+                    "weather_entity": "Pronóstico del tiempo",
                     "irradiance_sensor": "Irradiancia",
                     "temperature_sensor": "Tª Ambiental",
                     "temp_panel_sensor": "Tª del panel",
                     "wind_sensor": "Sensor de v. viento (m/s)",
-                    "ref_tilt": "Inclinación sensor de irrad (º)",
-                    "ref_orientation": "Orientación sensor de irrad (180º=S)",
-                    "weather_entity": "Pronostico del tiempo"
+                    "orientation_id": "Orientación/Geometría"
                 }
             },
             "reconfigure_string": {
@@ -180,8 +178,39 @@
                     "panel_model": "Modelo de Panel",
                     "num_panels": "Paneles en serie",
                     "num_strings": "Series en paralelo",
-                    "tilt": "Inclinación Paneles (º)",
-                    "azimuth": "Orientación Paneles (180º=S)"
+                    "orientation_id": "Orientación/Geometría"
+                }
+            },
+            "orientation_create": {
+                "title": "Nueva Orientación",
+                "description": "Define una geometría física (Tejado, seguidor, etc).",
+                "data": {
+                    "orientation_name": "Nombre (ej: Sur Principal)",
+                    "tilt": "Inclinación (º)",
+                    "azimuth": "Orientación (180º=S)"
+                }
+            },
+            "orientation_edit_select": {
+                "title": "Editar Orientación",
+                "description": "Selecciona la orientación a modificar.",
+                "data": {
+                    "selected_orientation": "Orientación"
+                }
+            },
+            "orientation_edit_form": {
+                "title": "Editar Orientación",
+                "description": "Modifica los datos geométricos.",
+                "data": {
+                    "orientation_name": "Nombre",
+                    "tilt": "Inclinación (º)",
+                    "azimuth": "Orientación (180º=S)"
+                }
+            },
+            "orientation_delete_select": {
+                "title": "Eliminar Orientación",
+                "description": "Selecciona la orientación a eliminar.",
+                "data": {
+                    "selected_orientation": "Orientación a eliminar"
                 }
             }
         },
@@ -190,13 +219,14 @@
             "no_models_available": "No hay modelos creados. Crea uno primero en 'Configurar Módulos FV'.",
             "no_sensor_groups": "No hay grupos de sensores. Crea uno primero.",
             "no_sensor_groups_available": "No hay grupos de sensores disponibles.",
-            "no_models_available_to_delete": "No hay modelos que se puedan eliminar.",
-            "cannot_delete_default": "No se puede eliminar el modelo predeterminado."
+            "no_orientations_available": "No hay orientaciones creadas. Crea una primero."
         },
         "abort": {
             "already_configured": "El dispositivo ya está configurado",
             "pv_models_saved": "Listado de módulos actualizados!",
-            "reconfigure_successful": "¡Configuración actualizada con éxito!"
+            "reconfigure_successful": "¡Configuración actualizada con éxito!",
+            "orientation_saved": "¡Orientación guardada!",
+            "orientation_deleted": "Orientación eliminada"
         }
     }
 }

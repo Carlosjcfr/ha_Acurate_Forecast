@@ -57,7 +57,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensor_group_data = db.get_sensor_group(group_name)
         
         if sensor_group_data:
-            async_add_entities([SolarStringSensor(hass, config_entry.data, db, sensor_group_data)], update_before_add=True)
+            # We also need the orientation data
+            ori_id = config_entry.data.get(CONF_ORIENTATION_ID)
+            orientation_data = db.get_orientation(ori_id)
+            async_add_entities([SolarStringSensor(hass, config_entry.data, db, sensor_group_data, orientation_data)], update_before_add=True)
         else:
             _LOGGER.error(f"Sensor group '{group_name}' not found in DB for string {config_entry.title}")
 
@@ -66,11 +69,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class SolarStringSensor(SensorEntity):
-    def __init__(self, hass, config_entry_data, db, sensor_group_data):
+    def __init__(self, hass, config_entry_data, db, sensor_group_data, orientation_data=None):
         self.hass = hass
         self._config = config_entry_data
         self._db = db
         self._sensor_group = sensor_group_data
+        self._orientation_data = orientation_data
         
         # Recuperar datos del modelo desde la DB usando el nombre
         model_name = self._config.get(CONF_PANEL_MODEL)
@@ -92,12 +96,16 @@ class SolarStringSensor(SensorEntity):
         # Link to the Sensor Group Device? Or create its own device?
         # Strings are virtual, maybe its own device or no device (just entity).
         # Let's give it a device so it looks nice in UI.
+        # Industrial Grouping: Group by Orientation
+        ori_id = self._config.get(CONF_ORIENTATION_ID, "unknown")
+        ori_name = self._orientation_data.get(CONF_ORIENTATION_NAME, "Generic Orientation") if self._orientation_data else "Generic Orientation"
+        
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            name=self._attr_name,
-            manufacturer=self._panel_data.get("brand", "Generic") if self._panel_data else "Generic",
-            model=model_name,
-            via_device=(DOMAIN, sensor_group_data.get(CONF_SENSOR_GROUP_NAME)) # Logically linked
+            identifiers={(DOMAIN, f"orientation_{ori_id}")},
+            name=f"Orientación: {ori_name}",
+            manufacturer="Accurate Solar Forecast",
+            model="Solar Array Cluster",
+            via_device=(DOMAIN, "strings_hub") # Optional: nested devices? Not really supported well in HA without bridge
         )
 
     @property
@@ -166,13 +174,28 @@ class SolarStringSensor(SensorEntity):
         # ... logic not implemented fully in previous version but ready here
 
         # 4. Cálculos Geométricos para Transposición
-        target_az = self._config.get(CONF_AZIMUTH)
-        target_tilt = self._config.get(CONF_TILT)
+        # Usar datos de la Orientación si están disponibles, si no, fallback a config (compatibilidad)
+        if self._orientation_data:
+            target_az = self._orientation_data.get(CONF_AZIMUTH, 180)
+            target_tilt = self._orientation_data.get(CONF_TILT, 30)
+        else:
+            target_az = self._config.get(CONF_AZIMUTH, 180)
+            target_tilt = self._config.get(CONF_TILT, 30)
+            
         cos_theta_target = self.calculate_cos_incidence(sun_az, sun_el, target_az, target_tilt)
 
-        # Sensor Referencia (GEOMETRÍA DESDE EL GRUPO)
-        ref_az = self._sensor_group.get(CONF_REF_ORIENTATION)
-        ref_tilt = self._sensor_group.get(CONF_REF_TILT)
+        # Sensor Referencia (GEOMETRÍA DESDE EL GRUPO - ahora vinculada a una Orientación en DB)
+        ref_ori_id = self._sensor_group.get(CONF_ORIENTATION_ID)
+        ref_ori_data = self._db.get_orientation(ref_ori_id)
+        
+        if ref_ori_data:
+            ref_az = ref_ori_data.get(CONF_AZIMUTH, 180)
+            ref_tilt = ref_ori_data.get(CONF_TILT, 30)
+        else:
+            # Fallback a valores antiguos si existen
+            ref_az = self._sensor_group.get(CONF_REF_ORIENTATION, 180)
+            ref_tilt = self._sensor_group.get(CONF_REF_TILT, 0)
+            
         cos_theta_ref = self.calculate_cos_incidence(sun_az, sun_el, ref_az, ref_tilt)
 
         # Transposición de Irradiancia
@@ -304,21 +327,14 @@ class SensorGroupVirtualSensor(SensorEntity):
         self._attr_icon = "mdi:link-variant"
         self._attr_should_poll = False
         
-        # Determine Device Info
-        if target_device_identifiers:
-            # Link to existing device (e.g., Weather Station)
-            self._attr_device_info = DeviceInfo(
-                identifiers=target_device_identifiers
-            )
-        else:
-            # Fallback: Create own device
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, config_entry.entry_id)},
-                name=self._name,
-                manufacturer="Accurate Solar Forecast",
-                model="Sensor Group",
-                entry_type=dr.DeviceEntryType.SERVICE
-            )
+        # Industrial Grouping: All Sensor Groups in one "service" device
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, "sensor_groups_hub")},
+            name="Grupos de Sensores",
+            manufacturer="Accurate Solar Forecast",
+            model="Diagnostics Hub",
+            entry_type=dr.DeviceEntryType.SERVICE
+        )
 
     async def async_added_to_hass(self):
         """Subscribe to all linked sensors."""
@@ -386,8 +402,7 @@ class SensorGroupVirtualSensor(SensorEntity):
         elif "Partial" in [s1, s2, s3, s4]: status = "Partial"
         
         # Store configuration in attributes too
-        attributes["ref_tilt"] = self._config.get(CONF_REF_TILT)
-        attributes["ref_orientation"] = self._config.get(CONF_REF_ORIENTATION)
+        attributes["orientation_id"] = self._config.get(CONF_ORIENTATION_ID)
         
         # Check critical sensor
         if attributes.get("irradiance") in ["unavailable", "unknown", None]:

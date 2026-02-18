@@ -1,33 +1,42 @@
-# 📄 Plan de Optimización y Limpieza: `config_flow.py`
+# Hoja de Ruta: Reestructuración Industrial
 
-Basado en el análisis de tu código actual frente al último diagrama de flujo adjunto y tus solicitudes recientes (eliminar borrados nativos, reestructurar menús), he detectado los siguientes puntos a intervenir.
+Este documento centraliza las mejoras pendientes para profesionalizar la integración y adaptarla a un uso industrial/SCADA.
 
-### 1. 🗑️ Código Muerto (A Eliminar)
+## ✅ Tareas de Limpieza (Completadas)
 
-Funciones que existen en el archivo pero ya no son accesibles desde ningún menú o no son necesarias delegando en Home Assistant.
+Eliminación de código huérfano y optimización del flujo.
 
-* **`async_step_pv_model_delete_select`**:
-  * *Motivo:* En el paso anterior solicitaste retirar la opción de borrar modelos del menú "Acciones". Al no haber botón, esta función es inalcanzable.
-* **Constantes `ACTION_DELETE` / `ACTION_EDIT` / `ACTION_CREATE`**:
-  * *Motivo:* Se definieron al principio de la clase pero no se están utilizando en la lógica de flujo actual, que es explícita por pasos (`step_id`).
-* **`self.selected_action`**:
-  * *Motivo:* Variable de estado no utilizada en el nuevo esquema modular.
-
-### 2. ⚡ Optimizaciones y Refactorización
-
-Mejoras para reducir duplicidad y asegurar robustez.
-
-* **Consolidación de Helpers de Formularios (`_show_...`)**:
-  * *Estado Actual:* Las funciones `_show_pv_model_form` y `_show_sensor_group_form` están bien planteadas, pero haremos una revisión para asegurar que manejan `vol.UNDEFINED` de forma limpia en lugar de valores hardcoded vacíos donde no aplica.
-* **Limpieza de `temp_data`**:
-  * *Acción:* Asegurar que `self.temp_data` se limpie correctamente al iniciar un nuevo flujo para evitar "contaminación" cruzada si el usuario cancela y vuelve a entrar sin cerrar el diálogo.
-* **Validación de Ramas**:
-  * **Rama Strings:** El diagrama muestra `Seleccionar Fabricante` -> `Formulario String`. El código lo implementa dividido en dos pasos (`select_brand` y `details`) por limitaciones técnicas de HA (no se pueden filtrar modelos dinámicamente sin recargar el paso). *Se mantiene así por necesidad técnica, pero se limpia el código.*
-
-### 3. 🔍 Cambios en Traducciones (Limpieza)
-
-* Eliminar las claves huérfanas en `es.json` y `en.json` referencias a `pv_model_delete_select` para mantener los archivos de idioma limpios.
+* **Limpieza de `config_flow.py`**:
+  * Eliminado `async_step_pv_model_delete_select`.
+  * Eliminadas constantes obsoletas y variables de estado sin uso.
+  * Garantizado el reset de `self.temp_data` en cada rama del menú.
+* **Traducciones**: Claves de borrado eliminadas en `es.json` y `en.json`.
 
 ---
 
-### 🛠️ Hoja de Ruta de la Ejecución
+## 🏗️ Fase Actual: Agrupación Lógica y Escalabilidad
+
+El objetivo es pasar de un modelo de "entidades sueltas" a "Dispositivos Lógicos" que agrupen la información de forma coherente.
+
+### 1. Gestión de Orientaciones
+
+* **Base de Datos**: Crear un catálogo de "Orientaciones" (ej: "Tejado Principal", "Shed Este").
+* **Atributos**: Cada orientación define un par único de (Inclinación, Azimut).
+* **Configuración**: Al crear un String, se seleccionará una orientación del catálogo en lugar de introducir grados manualmente.
+
+### 2. Rediseño de Dispositivos (Servicios)
+
+Refactorizar `DeviceInfo` en `sensor.py` para agrupar entidades en 3 dispositivos maestros:
+
+1. **"Grupos de Sensores"**: Centraliza los estados de salud y diagnósticos de todos los sensores físicos.
+2. **"Hub de Orientación: [Nombre]"**: Se creará un dispositivo por cada orientación configurada (ej: "Orientación: Sur"). Todos los Strings asociados a esa orientación aparecerán como entidades dentro de este dispositivo.
+3. **"Catálogo de Módulos"**: Dispositivo informativo con los modelos de paneles registrados.
+
+---
+
+## ✅ Logros Recientes
+
+* Implementación de **Modelo Híbrido (Directa + Difusa)** usando `cloud_coverage`.
+* Creación de **Entidad Virtual de Estado** para Grupos de Sensores.
+* Vinculación dinámica de dispositivos basada en el sensor de irradiancia.
+* Reordenación de interfaz para mejor UX.

@@ -1,7 +1,11 @@
 import json
 import os
 from homeassistant.helpers.storage import Store
-from .const import CONF_SENSOR_GROUP_NAME, CONF_REF_SENSOR, CONF_REF_TILT, CONF_REF_ORIENTATION, CONF_TEMP_SENSOR, CONF_WIND_SENSOR, CONF_TEMP_PANEL_SENSOR, CONF_WEATHER_ENTITY
+from .const import (
+    CONF_SENSOR_GROUP_NAME, CONF_REF_SENSOR, CONF_REF_TILT, CONF_REF_ORIENTATION, 
+    CONF_TEMP_SENSOR, CONF_WIND_SENSOR, CONF_TEMP_PANEL_SENSOR, CONF_WEATHER_ENTITY,
+    CONF_ORIENTATION_NAME, CONF_TILT, CONF_AZIMUTH
+)
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "accurate_forecast_pv_models"
@@ -11,6 +15,7 @@ class PVDatabase:
         self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
         self.data = {}
         self.sensor_groups = {} # Separate dictionary for sensor groups
+        self.orientations = {} # New dictionary for orientations
 
     async def async_load(self):
         """Carga la DB del disco."""
@@ -41,12 +46,14 @@ class PVDatabase:
                      self.data = data
             
             self.sensor_groups = data.get("sensor_groups", {})
+            self.orientations = data.get("orientations", {})
 
     async def async_save(self):
         """Guarda la DB al disco."""
         save_data = {
             "models": self.data,
-            "sensor_groups": self.sensor_groups
+            "sensor_groups": self.sensor_groups,
+            "orientations": self.orientations
         }
         await self._store.async_save(save_data)
 
@@ -101,7 +108,7 @@ class PVDatabase:
         return {k: v["name"] for k, v in self.data.items()}
 
     # --- SENSOR GROUP METHODS ---
-    def add_sensor_group(self, name, irradiance_sensor, temp_sensor, temp_panel_sensor, wind_sensor, ref_tilt, ref_orientation, weather_entity=None):
+    def add_sensor_group(self, name, irradiance_sensor, temp_sensor, temp_panel_sensor, wind_sensor, orientation_id, weather_entity=None):
         group_id = name.lower().replace(" ", "_")
         self.sensor_groups[group_id] = {
             CONF_SENSOR_GROUP_NAME: name,
@@ -109,8 +116,7 @@ class PVDatabase:
             CONF_TEMP_SENSOR: temp_sensor,
             CONF_TEMP_PANEL_SENSOR: temp_panel_sensor,
             CONF_WIND_SENSOR: wind_sensor,
-            CONF_REF_TILT: ref_tilt,
-            CONF_REF_ORIENTATION: ref_orientation,
+            CONF_ORIENTATION_ID: orientation_id,
             CONF_WEATHER_ENTITY: weather_entity
         }
         return self.async_save()
@@ -131,5 +137,34 @@ class PVDatabase:
     def delete_sensor_group(self, group_id):
         if group_id in self.sensor_groups:
             del self.sensor_groups[group_id]
+            return self.async_save()
+        return False
+
+    # --- ORIENTATION METHODS ---
+    def add_orientation(self, name, tilt, azimuth):
+        orientation_id = name.lower().replace(" ", "_")
+        self.orientations[orientation_id] = {
+            CONF_ORIENTATION_NAME: name,
+            CONF_TILT: tilt,
+            CONF_AZIMUTH: azimuth
+        }
+        return self.async_save()
+
+    def get_orientation(self, orientation_id):
+        return self.orientations.get(orientation_id)
+
+    def list_orientations(self):
+        """Devuelve dict {id: nombre} para selectores."""
+        if not self.orientations or not isinstance(self.orientations, dict):
+            return {}
+        return {
+            k: v[CONF_ORIENTATION_NAME] 
+            for k, v in self.orientations.items() 
+            if isinstance(v, dict) and v.get(CONF_ORIENTATION_NAME)
+        }
+
+    def delete_orientation(self, orientation_id):
+        if orientation_id in self.orientations:
+            del self.orientations[orientation_id]
             return self.async_save()
         return False

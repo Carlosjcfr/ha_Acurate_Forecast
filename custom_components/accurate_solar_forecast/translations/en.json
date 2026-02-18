@@ -2,17 +2,18 @@
     "config": {
         "step": {
             "user": {
-                "title": "Solar Forecast Configuration",
+                "title": "Accurate solar forecast",
                 "description": "What do you want to add?",
                 "menu_options": {
                     "menu_pv_models": "Configure PV Modules",
                     "menu_strings": "Configure Strings",
-                    "menu_sensor_groups": "Configure Sensors"
+                    "menu_sensor_groups": "Configure Sensors",
+                    "menu_orientations": "Manage Orientations"
                 }
             },
             "menu_pv_models": {
                 "title": "Actions",
-                "description": "PV Model Database.",
+                "description": "PV Module database.",
                 "menu_options": {
                     "pv_model_create": "Create PV Module",
                     "pv_model_edit_select": "Edit PV Module"
@@ -20,7 +21,7 @@
             },
             "menu_strings": {
                 "title": "Actions",
-                "description": "Solar Array Configuration.",
+                "description": "Solar array configuration.",
                 "menu_options": {
                     "string_create_select_brand": "Create String",
                     "string_edit_select": "Edit String"
@@ -28,10 +29,19 @@
             },
             "menu_sensor_groups": {
                 "title": "Actions",
-                "description": "Sensor Group Configuration.",
+                "description": "Sensor group configuration.",
                 "menu_options": {
                     "sensor_group_create": "Create Group",
                     "sensor_group_edit_select": "Edit Group"
+                }
+            },
+            "menu_orientations": {
+                "title": "Actions",
+                "description": "Orientation (geometries) catalog.",
+                "menu_options": {
+                    "orientation_create": "Create Orientation",
+                    "orientation_edit_select": "Edit Orientation",
+                    "orientation_delete_select": "Delete Orientation"
                 }
             },
             "pv_model_create": {
@@ -79,25 +89,17 @@
                     "pv_model_finish": "Finish & Exit"
                 }
             },
-            "pv_model_delete_select": {
-                "title": "Delete Module",
-                "description": "Select the module to delete.",
-                "data": {
-                    "selected_model": "Module to delete"
-                }
-            },
             "sensor_group_create": {
                 "title": "Create Sensor Group",
-                "description": "Define physical sensors available.",
+                "description": "Define available physical sensors.",
                 "data": {
                     "sensor_group_name": "Group Name",
+                    "weather_entity": "Weather forecast",
                     "irradiance_sensor": "Irradiance",
                     "temperature_sensor": "Ambient Temp",
                     "temp_panel_sensor": "Panel Temp",
                     "wind_sensor": "Wind Speed (m/s)",
-                    "ref_tilt": "Irrad. Sensor Tilt (°)",
-                    "ref_orientation": "Irrad. Sensor Orientation (180°=S)",
-                    "weather_entity": "Weather forecast"
+                    "orientation_id": "Orientation/Geometry"
                 }
             },
             "sensor_group_edit_select": {
@@ -112,13 +114,12 @@
                 "description": "Modify group configuration.",
                 "data": {
                     "sensor_group_name": "Group Name",
+                    "weather_entity": "Weather forecast",
                     "irradiance_sensor": "Irradiance",
                     "temperature_sensor": "Ambient Temp",
                     "temp_panel_sensor": "Panel Temp",
                     "wind_sensor": "Wind Speed (m/s)",
-                    "ref_tilt": "Irrad. Sensor Tilt (°)",
-                    "ref_orientation": "Irrad. Sensor Orientation (180°=S)",
-                    "weather_entity": "Weather forecast"
+                    "orientation_id": "Orientation/Geometry"
                 }
             },
             "string_create_select_brand": {
@@ -137,13 +138,12 @@
                     "panel_model": "Panel Model",
                     "num_panels": "Series Panels",
                     "num_strings": "Parallel Strings",
-                    "tilt": "Panel Tilt (°)",
-                    "azimuth": "Panel Azimuth (180°=S)"
+                    "orientation_id": "Orientation/Geometry"
                 }
             },
             "string_edit_select": {
                 "title": "Edit String",
-                "description": "Select the string to edit.",
+                "description": "Select the string to modify.",
                 "data": {
                     "selected_string": "Solar String"
                 }
@@ -155,8 +155,7 @@
                     "panel_model": "Panel Model",
                     "num_panels": "Series Panels",
                     "num_strings": "Parallel Strings",
-                    "tilt": "Panel Tilt (°)",
-                    "azimuth": "Panel Azimuth (180°=S)"
+                    "orientation_id": "Orientation/Geometry"
                 }
             },
             "reconfigure_sensor_group": {
@@ -164,13 +163,12 @@
                 "description": "Modify group configuration.",
                 "data": {
                     "sensor_group_name": "Group Name",
+                    "weather_entity": "Weather forecast",
                     "irradiance_sensor": "Irradiance",
                     "temperature_sensor": "Ambient Temp",
                     "temp_panel_sensor": "Panel Temp",
                     "wind_sensor": "Wind Speed (m/s)",
-                    "ref_tilt": "Irrad. Sensor Tilt (°)",
-                    "ref_orientation": "Irrad. Sensor Orientation (180°=S)",
-                    "weather_entity": "Weather forecast"
+                    "orientation_id": "Orientation/Geometry"
                 }
             },
             "reconfigure_string": {
@@ -180,8 +178,39 @@
                     "panel_model": "Panel Model",
                     "num_panels": "Series Panels",
                     "num_strings": "Parallel Strings",
-                    "tilt": "Panel Tilt (°)",
-                    "azimuth": "Panel Azimuth (180°=S)"
+                    "orientation_id": "Orientation/Geometry"
+                }
+            },
+            "orientation_create": {
+                "title": "New Orientation",
+                "description": "Define a physical geometry (Roof, tracker, etc).",
+                "data": {
+                    "orientation_name": "Name (e.g., South Main)",
+                    "tilt": "Tilt (º)",
+                    "azimuth": "Orientation (180º=S)"
+                }
+            },
+            "orientation_edit_select": {
+                "title": "Edit Orientation",
+                "description": "Select the orientation to modify.",
+                "data": {
+                    "selected_orientation": "Orientation"
+                }
+            },
+            "orientation_edit_form": {
+                "title": "Edit Orientation",
+                "description": "Modify geometric data.",
+                "data": {
+                    "orientation_name": "Name",
+                    "tilt": "Tilt (º)",
+                    "azimuth": "Orientation (180º=S)"
+                }
+            },
+            "orientation_delete_select": {
+                "title": "Delete Orientation",
+                "description": "Select the orientation to delete.",
+                "data": {
+                    "selected_orientation": "Orientation to delete"
                 }
             }
         },
@@ -190,13 +219,14 @@
             "no_models_available": "No models created. Create one first in 'Configure PV Modules'.",
             "no_sensor_groups": "No sensor groups. Create one first.",
             "no_sensor_groups_available": "No sensor groups available.",
-            "no_models_available_to_delete": "No models available to delete.",
-            "cannot_delete_default": "Cannot delete the default model."
+            "no_orientations_available": "No orientations created. Create one first."
         },
         "abort": {
             "already_configured": "Device is already configured",
             "pv_models_saved": "PV Modules list updated!",
-            "reconfigure_successful": "Configuration successfully updated!"
+            "reconfigure_successful": "Configuration successfully updated!",
+            "orientation_saved": "Orientation saved!",
+            "orientation_deleted": "Orientation deleted"
         }
     }
 }

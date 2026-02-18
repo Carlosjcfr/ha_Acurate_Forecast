@@ -25,4 +25,6 @@ CONF_REF_TILT = "ref_tilt"
 # New Constants for Sensor Groups
 CONF_SENSOR_GROUP_NAME = "sensor_group_name"
 CONF_SENSOR_GROUP_ID = "sensor_group_id"
+CONF_ORIENTATION_NAME = "orientation_name"
+CONF_ORIENTATION_ID = "orientation_id"
 ATTR_SOURCE_SENSOR = "source_sensor"

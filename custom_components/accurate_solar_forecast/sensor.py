@@ -5,6 +5,7 @@ from homeassistant.const import UnitOfPower, UnitOfTemperature, UnitOfSpeed
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .const import *
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,10 +17,29 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # CASE 1: SENSOR GROUP (GROUP OF SENSORS)
     # CASE 1: SENSOR GROUP (GROUP OF SENSORS)
     if CONF_SENSOR_GROUP_NAME in config_entry.data:
-        # Sensor Groups act as data containers for logical linking.
-        # We do NOT create proxy entities to avoid duplication.
-        # The data is already available in the DB for other components (Strings) to use.
-        return
+        # Create a Virtual Link Sensor
+        # This sensor indicates status and holds attributes of all linked sensors
+        # We attempt to link it to the existing device of the Irradiance Sensor
+        
+        ref_sensor_id = config_entry.data.get(CONF_REF_SENSOR)
+        device_identifiers = None
+        
+        if ref_sensor_id:
+            try:
+                ent_reg = er.async_get(hass)
+                dev_reg = dr.async_get(hass)
+                
+                ref_entry = ent_reg.async_get(ref_sensor_id)
+                if ref_entry and ref_entry.device_id:
+                    device = dev_reg.async_get(ref_entry.device_id)
+                    if device:
+                        device_identifiers = device.identifiers
+            except Exception as e:
+                _LOGGER.warning(f"Could not link to existing device: {e}")
+
+        async_add_entities([
+            SensorGroupVirtualSensor(hass, config_entry, device_identifiers)
+        ])
 
     # CASE 2: SOLAR STRING (POWER PREDICTION)
     elif CONF_STRING_NAME in config_entry.data:
@@ -213,4 +233,96 @@ class SolarStringSensor(SensorEntity):
         self.async_on_remove(
             async_track_state_change_event(self.hass, entities, self._update_logic)
         )
-        self._update_logic()
+
+class SensorGroupVirtualSensor(SensorEntity):
+    """A virtual sensor that represents the health and data of a Sensor Group."""
+    
+    def __init__(self, hass, config_entry, target_device_identifiers=None):
+        self.hass = hass
+        self._config = config_entry.data
+        self._name = self._config.get(CONF_SENSOR_GROUP_NAME)
+        
+        # Identity
+        self._attr_name = self._name
+        self._attr_unique_id = f"sg_{self._name.lower().replace(' ', '_')}_status"
+        self._attr_native_unit_of_measurement = None
+        self._attr_device_class = None # Status text
+        self._attr_icon = "mdi:link-variant"
+        self._attr_should_poll = False
+        
+        # Determine Device Info
+        if target_device_identifiers:
+            # Link to existing device (e.g., Weather Station)
+            self._attr_device_info = DeviceInfo(
+                identifiers=target_device_identifiers
+            )
+        else:
+            # Fallback: Create own device
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, config_entry.entry_id)},
+                name=self._name,
+                manufacturer="Accurate Solar Forecast",
+                model="Sensor Group",
+                entry_type=dr.DeviceEntryType.SERVICE
+            )
+
+    async def async_added_to_hass(self):
+        """Subscribe to all linked sensors."""
+        sensors_to_track = []
+        if self._config.get(CONF_REF_SENSOR): sensors_to_track.append(self._config[CONF_REF_SENSOR])
+        if self._config.get(CONF_TEMP_SENSOR): sensors_to_track.append(self._config[CONF_TEMP_SENSOR])
+        if self._config.get(CONF_TEMP_PANEL_SENSOR): sensors_to_track.append(self._config[CONF_TEMP_PANEL_SENSOR])
+        if self._config.get(CONF_WIND_SENSOR): sensors_to_track.append(self._config[CONF_WIND_SENSOR])
+        
+        self.async_on_remove(
+            async_track_state_change_event(self.hass, sensors_to_track, self._update_state)
+        )
+        self._update_state()
+
+    @callback
+    def _update_state(self, event=None):
+        """Update state and attributes based on linked sensors."""
+        
+        attributes = {}
+        status = "OK"
+        
+        # Helper to get state
+        def get_val(key, attr_name):
+            entity_id = self._config.get(key)
+            if not entity_id:
+                return
+            
+            state_obj = self.hass.states.get(entity_id)
+            if state_obj:
+                attributes[attr_name] = state_obj.state
+                attributes[f"{attr_name}_unit"] = state_obj.attributes.get("unit_of_measurement")
+                
+                if state_obj.state in ["unavailable", "unknown"]:
+                    # Modify outer scope status if we were using a class, but here we can't easily.
+                    # Simple approach: Return status flag
+                    return "Partial"
+            else:
+                attributes[attr_name] = "unavailable"
+                return "Error"
+            return "OK"
+
+        # Fetch values for attributes
+        s1 = get_val(CONF_REF_SENSOR, "irradiance")
+        s2 = get_val(CONF_TEMP_SENSOR, "temperature")
+        s3 = get_val(CONF_TEMP_PANEL_SENSOR, "panel_temperature")
+        s4 = get_val(CONF_WIND_SENSOR, "wind_speed")
+        
+        if "Error" in [s1, s2, s3, s4]: status = "Error"
+        elif "Partial" in [s1, s2, s3, s4]: status = "Partial"
+        
+        # Store configuration in attributes too
+        attributes["ref_tilt"] = self._config.get(CONF_REF_TILT)
+        attributes["ref_orientation"] = self._config.get(CONF_REF_ORIENTATION)
+        
+        # Check critical sensor
+        if attributes.get("irradiance") in ["unavailable", "unknown", None]:
+            status = "Unavailable"
+            
+        self._attr_native_value = status
+        self._attr_extra_state_attributes = attributes
+        self.async_write_ha_state()

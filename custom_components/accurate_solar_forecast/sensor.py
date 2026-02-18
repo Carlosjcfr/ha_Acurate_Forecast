@@ -14,43 +14,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     db = hass.data[DOMAIN]["db"] # DB is assumed to be loaded in __init__
     
     # CASE 1: SENSOR GROUP (GROUP OF SENSORS)
+    # CASE 1: SENSOR GROUP (GROUP OF SENSORS)
     if CONF_SENSOR_GROUP_NAME in config_entry.data:
-        # Create entities for this group
-        entities = []
-        name = config_entry.data[CONF_SENSOR_GROUP_NAME]
-        
-        # We need a unique ID for the device based on the config entry ID or name
-        device_id = config_entry.entry_id 
-        
-        # 1. Irradiance Proxy
-        if CONF_REF_SENSOR in config_entry.data:
-            entities.append(SensorGroupProxySensor(
-                hass, config_entry, device_id, name, "Irradiance",
-                config_entry.data[CONF_REF_SENSOR], "irradiance", "W/m²"
-            ))
-            
-        # 2. Temperature Proxy
-        if CONF_TEMP_SENSOR in config_entry.data:
-            entities.append(SensorGroupProxySensor(
-                hass, config_entry, device_id, name, "Temperature",
-                config_entry.data[CONF_TEMP_SENSOR], "temperature", "°C"
-            ))
-            
-        # 3. Panel Temp Proxy (Optional)
-        if config_entry.data.get(CONF_TEMP_PANEL_SENSOR):
-            entities.append(SensorGroupProxySensor(
-                hass, config_entry, device_id, name, "Panel Temperature",
-                config_entry.data[CONF_TEMP_PANEL_SENSOR], "temperature", "°C"
-            ))
-
-        # 4. Wind Proxy (Optional)
-        if config_entry.data.get(CONF_WIND_SENSOR):
-             entities.append(SensorGroupProxySensor(
-                hass, config_entry, device_id, name, "Wind Speed",
-                config_entry.data[CONF_WIND_SENSOR], "wind_speed", "m/s"
-            ))
-            
-        async_add_entities(entities)
+        # Sensor Groups act as data containers for logical linking.
+        # We do NOT create proxy entities to avoid duplication.
+        # The data is already available in the DB for other components (Strings) to use.
+        return
 
     # CASE 2: SOLAR STRING (POWER PREDICTION)
     elif CONF_STRING_NAME in config_entry.data:
@@ -73,45 +42,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _LOGGER.error(f"Sensor group '{group_name}' not found in DB for string {config_entry.title}")
 
 
-class SensorGroupProxySensor(SensorEntity):
-    """A sensor that mirrors the value of another sensor, grouped under a device."""
-    
-    def __init__(self, hass, config_entry, device_id, device_name, name_suffix, source_entity_id, device_class, unit):
-        self.hass = hass
-        self._source_entity_id = source_entity_id
-        self._attr_name = f"{device_name} {name_suffix}"
-        self._attr_unique_id = f"{device_id}_{name_suffix.lower().replace(' ', '_')}"
-        self._attr_device_class = device_class
-        self._attr_native_unit_of_measurement = unit
-        self._attr_state_class = SensorStateClass.MEASUREMENT
-        self._attr_should_poll = False
-        
-        # Device Info to group them together
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            name=device_name,
-            manufacturer="Accurate Solar Forecast",
-            model="Sensor Group",
-        )
 
-    async def async_added_to_hass(self):
-        """Subscribe to source entity."""
-        self.async_on_remove(
-            async_track_state_change_event(self.hass, [self._source_entity_id], self._update_state)
-        )
-        self._update_state()
-
-    @callback
-    def _update_state(self, event=None):
-        state = self.hass.states.get(self._source_entity_id)
-        if state and state.state not in ["unavailable", "unknown"]:
-            try:
-                self._attr_native_value = float(state.state)
-            except ValueError:
-                self._attr_native_value = None
-        else:
-            self._attr_native_value = None
-        self.async_write_ha_state()
 
 
 class SolarStringSensor(SensorEntity):

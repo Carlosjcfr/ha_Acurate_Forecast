@@ -47,14 +47,16 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_menu_pv_models(self, user_input=None):
         """Submenú para Módulos FV."""
         options = ["pv_model_create"]
-        if self._db.list_models():
+        
+        models = self._db.list_models()
+        if models and len(models) > 0:
              options.append("pv_model_edit_select")
-             # Only show delete if there are models other than the default one?
-             # For simplicity and to follow instructions "check if stored previously"
-             # Since default is always there, Edit keeps appearing.
-             # Delete should probably check if there is > 1 model (assuming default is undeletable)
-             # But let's stick to the rule: if models exist -> show options.
-             options.append("pv_model_delete_select")
+             
+             # Check if there are models other than default to allow delete
+             # Assuming 'default_450w' is the key for the default model
+             deletable_models = [k for k in models.keys() if k != "default_450w"]
+             if len(deletable_models) > 0:
+                options.append("pv_model_delete_select")
              
         return self.async_show_menu(
             step_id="menu_pv_models",
@@ -198,7 +200,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # =================================================================================
     async def async_step_menu_sensor_groups(self, user_input=None):
         options = ["sensor_group_create"]
-        if self._db.list_sensor_groups():
+        if self._db.list_sensor_groups() and len(self._db.list_sensor_groups()) > 0:
             options.append("sensor_group_edit_select")
             
         return self.async_show_menu(

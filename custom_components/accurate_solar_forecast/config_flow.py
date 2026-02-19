@@ -325,8 +325,6 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # =================================================================================
     # BRANCH 3: STRINGS (Integraciones - Create Only)
     # =================================================================================
-    
-    # async_step_menu_strings removed (Direct to creation)
 
 
     # 3.1 CREATE STRING - Step A: Select Brand & Group
@@ -439,7 +437,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
         })
         return self.async_show_form(step_id="string_create_details", data_schema=schema)
 
-    # Edit String functions removed. Use Reconfigure flow.
+
 
     # =================================================================================
     # RECONFIGURE FLOW (Native "Configure" button support)

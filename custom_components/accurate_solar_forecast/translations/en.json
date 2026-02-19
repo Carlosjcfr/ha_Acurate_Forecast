@@ -18,14 +18,6 @@
                     "pv_model_edit_select": "Edit PV Module"
                 }
             },
-            "menu_strings": {
-                "title": "Actions",
-                "description": "Solar Array Configuration.",
-                "menu_options": {
-                    "string_create_select_relations": "Create String",
-                    "string_edit_select": "Edit String"
-                }
-            },
             "menu_sensor_groups": {
                 "title": "Actions",
                 "description": "Sensor Group Configuration.",
@@ -144,25 +136,6 @@
             "string_create_details": {
                 "title": "String Details",
                 "description": "Step 2: Geometry and Model.",
-                "data": {
-                    "panel_model": "Panel Model",
-                    "num_panels": "Series Panels",
-                    "num_strings": "Parallel Strings",
-                    "tilt": "Panel Tilt (°)",
-                    "azimuth": "Panel Azimuth (180°=S)",
-                    "real_production_sensor": "Real Production Sensor (W)"
-                }
-            },
-            "string_edit_select": {
-                "title": "Edit String",
-                "description": "Select the string to edit.",
-                "data": {
-                    "selected_string": "Solar String"
-                }
-            },
-            "string_edit_details": {
-                "title": "Edit String",
-                "description": "Modify string geometry or model.",
                 "data": {
                     "panel_model": "Panel Model",
                     "num_panels": "Series Panels",

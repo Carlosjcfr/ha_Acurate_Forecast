@@ -18,14 +18,6 @@
                     "pv_model_edit_select": "Editar módulo FV"
                 }
             },
-            "menu_strings": {
-                "title": "Acciones",
-                "description": "Configuración de arrays solares.",
-                "menu_options": {
-                    "string_create_select_relations": "Crear String",
-                    "string_edit_select": "Editar String"
-                }
-            },
             "menu_sensor_groups": {
                 "title": "Acciones",
                 "description": "Configuración de grupos de sensores.",
@@ -144,25 +136,6 @@
             "string_create_details": {
                 "title": "Detalles del String",
                 "description": "Paso 2: Geometría y Modelo.",
-                "data": {
-                    "panel_model": "Modelo de Panel",
-                    "num_panels": "Paneles en serie",
-                    "num_strings": "Series en paralelo",
-                    "tilt": "Inclinación Paneles (º)",
-                    "azimuth": "Orientación Paneles (180º=S)",
-                    "real_production_sensor": "Sensor de Producción Real (W)"
-                }
-            },
-            "string_edit_select": {
-                "title": "Editar String",
-                "description": "Selecciona el string a modificar.",
-                "data": {
-                    "selected_string": "String Solar"
-                }
-            },
-            "string_edit_details": {
-                "title": "Editar String",
-                "description": "Modifica la geometría o el modelo del string.",
                 "data": {
                     "panel_model": "Modelo de Panel",
                     "num_panels": "Paneles en serie",

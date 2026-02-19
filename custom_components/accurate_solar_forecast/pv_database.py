@@ -55,15 +55,18 @@ class PVDatabase:
         await self._store.async_save(save_data)
 
     # --- ROOF METHODS ---
-    def add_roof(self, name):
+    def add_roof(self, name, tilt=None, azimuth=None):
         """Adds a roof to the database."""
         roof_id = name.lower().replace(" ", "_")
-        if roof_id not in self.roofs:
-            self.roofs[roof_id] = {
-                "name": name
-            }
-            return self.async_save()
-        return True # Already exists
+        
+        # If updating or creating, we want to store the data
+        # If it exists, we update it.
+        self.roofs[roof_id] = {
+            "name": name,
+            "tilt": tilt,
+            "azimuth": azimuth
+        }
+        return self.async_save()
 
     def list_roofs(self):
         """Returns a dict {id: name} of roofs."""

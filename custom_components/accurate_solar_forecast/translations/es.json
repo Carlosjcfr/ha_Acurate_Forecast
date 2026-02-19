@@ -6,7 +6,7 @@
                 "description": "¿Que quieres añadir?",
                 "menu_options": {
                     "menu_pv_models": "Configurar Módulos Fotovoltaicos",
-                    "menu_strings": "Configurar Strings",
+                    "string_create_select_relations": "Crear/Añadir String",
                     "menu_sensor_groups": "Configurar Sensores"
                 }
             },
@@ -128,8 +128,17 @@
                     "string_name": "Nombre del String",
                     "selected_sensor_group": "Grupo de Sensores",
                     "brand": "Fabricante del Panel",
-                    "real_production_sensor": "Sensor de Producción Real (W)",
+                    "real_production_sensor": "Producción Solar (W)",
                     "roof_name": "Tejado (Seleccionar o Crear Nuevo)"
+                }
+            },
+            "roof_create": {
+                "title": "Crear Nuevo Tejado",
+                "description": "Introduce los detalles del nuevo tejado.",
+                "data": {
+                    "name": "Nombre del Tejado",
+                    "tilt": "Inclinación (º)",
+                    "azimuth": "Orientación (180º=S)"
                 }
             },
             "string_create_details": {

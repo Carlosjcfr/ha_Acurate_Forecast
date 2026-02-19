@@ -6,7 +6,7 @@
                 "description": "What do you want to add?",
                 "menu_options": {
                     "menu_pv_models": "Configure PV Modules",
-                    "menu_strings": "Configure Strings",
+                    "string_create_select_relations": "Create/Add String",
                     "menu_sensor_groups": "Configure Sensors"
                 }
             },
@@ -128,8 +128,17 @@
                     "string_name": "String Name",
                     "selected_sensor_group": "Sensor Group",
                     "brand": "Panel Manufacturer",
-                    "real_production_sensor": "Real Production Sensor (W)",
+                    "real_production_sensor": "Solar Production (W)",
                     "roof_name": "Roof (Select or Create New for this string)"
+                }
+            },
+            "roof_create": {
+                "title": "Create New Roof",
+                "description": "Enter the details for the new roof.",
+                "data": {
+                    "name": "Roof Name",
+                    "tilt": "Tilt (°)",
+                    "azimuth": "Azimuth (180°=S)"
                 }
             },
             "string_create_details": {

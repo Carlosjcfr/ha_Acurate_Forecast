@@ -40,7 +40,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
         
         # Strings require a sensor group to be associated with
         if self._db.list_sensor_groups() and len(self._db.list_sensor_groups()) > 0:
-            menu_options.append("menu_strings")
+            menu_options.append("string_create_select_relations")
             
         menu_options.append("menu_sensor_groups")
         
@@ -322,25 +322,22 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # =================================================================================
     # BRANCH 3: STRINGS (Integraciones - Create & Edit Only)
     # =================================================================================
-    async def async_step_menu_strings(self, user_input=None):
-        options = ["string_create_select_relations"]
-        
-        # Check if there are any strings created
-        entries = self.hass.config_entries.async_entries(DOMAIN)
-        string_count = sum(1 for e in entries if CONF_STRING_NAME in e.data)
-        
-        if string_count > 0:
-            options.append("string_edit_select")
+    # =================================================================================
+    # BRANCH 3: STRINGS (Integraciones - Create Only)
+    # =================================================================================
+    
+    # async_step_menu_strings removed (Direct to creation)
 
-        return self.async_show_menu(
-            step_id="menu_strings",
-            menu_options=options 
-        )
 
     # 3.1 CREATE STRING - Step A: Select Brand & Group
     async def async_step_string_create_select_relations(self, user_input=None):
          if user_input is not None:
             self.temp_data = user_input
+            
+            # Check for "Nuevo tejado"
+            if self.temp_data.get(CONF_ROOF_NAME) == "Nuevo tejado":
+                return await self.async_step_roof_create()
+                
             return await self.async_step_string_create_details()
 
          brands_list = self._db.list_brands()
@@ -350,6 +347,9 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
              return self.async_abort(reason="no_sensor_groups_available")
          
          group_options = list(sensor_groups.keys())
+         
+         # Prepare Roof Options
+         roof_options = ["Nuevo tejado"] + list(self._db.list_roofs().values())
 
          schema = vol.Schema({
             vol.Required(CONF_STRING_NAME): str,
@@ -362,26 +362,45 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_REAL_PRODUCTION_SENSOR): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor", device_class="power")
             ),
-            vol.Optional(CONF_ROOF_NAME, default="Default Roof"): selector.SelectSelector(
+            vol.Optional(CONF_ROOF_NAME, default="Nuevo tejado"): selector.SelectSelector(
                 selector.SelectSelectorConfig(
-                    options=list(self._db.list_roofs().values()), 
+                    options=roof_options, 
                     mode="dropdown",
-                    custom_value=True
+                    custom_value=False # Must select "Nuevo tejado" to create, or pick existing. No free text here to avoid confusion? 
+                    # If we want free text "Create new" implicit, we keep True.
+                    # But user asked for specific flow: select "Nuevo tejado" -> go to form.
+                    # So custom_value=False forces selection.
                 )
             ),
         })
          return self.async_show_form(step_id="string_create_select_relations", data_schema=schema)
 
+    # 3.1.1 CREATE ROOF (Intermediate Step)
+    async def async_step_roof_create(self, user_input=None):
+        if user_input is not None:
+            name = user_input["name"]
+            tilt = user_input[CONF_TILT]
+            azimuth = user_input[CONF_AZIMUTH]
+            
+            # Save Roof
+            await self._db.add_roof(name, tilt, azimuth)
+            
+            # Update temp_data specific roof name (replace "Nuevo tejado")
+            self.temp_data[CONF_ROOF_NAME] = name
+            
+            return await self.async_step_string_create_details()
+            
+        schema = vol.Schema({
+            vol.Required("name"): str,
+            vol.Required(CONF_TILT, default=30): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
+            vol.Required(CONF_AZIMUTH, default=180): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+        })
+        return self.async_show_form(step_id="roof_create", data_schema=schema)
+
     # 3.1 CREATE STRING - Step B: Details
     async def async_step_string_create_details(self, user_input=None):
         if user_input is not None:
              final_data = {**self.temp_data, **user_input}
-             
-             # Save Roof if new
-             roof_name = self.temp_data.get(CONF_ROOF_NAME)
-             if roof_name:
-                 await self._db.add_roof(roof_name)
-
              return self.async_create_entry(
                 title=self.temp_data[CONF_STRING_NAME], 
                 data=final_data
@@ -390,96 +409,37 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
         selected_brand = self.temp_data[CONF_BRAND]
         models_filtered = self._db.list_models_by_brand(selected_brand)
         
+        # Check defaults from Roof
+        default_tilt = 30
+        default_azimuth = 180
+        
+        roof_name = self.temp_data.get(CONF_ROOF_NAME)
+        if roof_name:
+             # Find roof by name (we store NAME in temp_data)
+             roof_id = None
+             for rid, rname in self._db.list_roofs().items():
+                 if rname == roof_name:
+                     roof_id = rid
+                     break
+             
+             if roof_id:
+                 roof_data = self._db.get_roof(roof_id)
+                 if roof_data:
+                     default_tilt = roof_data.get("tilt") or 30
+                     default_azimuth = roof_data.get("azimuth") or 180
+
         schema = vol.Schema({
             vol.Required(CONF_PANEL_MODEL): selector.SelectSelector(
                 selector.SelectSelectorConfig(options=list(models_filtered.values()), mode="dropdown")
             ),
             vol.Required(CONF_NUM_PANELS, default=1): vol.All(int, vol.Range(min=1)),
             vol.Required(CONF_NUM_STRINGS, default=1): vol.All(int, vol.Range(min=1)),
-            vol.Required(CONF_TILT, default=30): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
-            vol.Required(CONF_AZIMUTH, default=180): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+            vol.Required(CONF_TILT, default=default_tilt): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
+            vol.Required(CONF_AZIMUTH, default=default_azimuth): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
         })
         return self.async_show_form(step_id="string_create_details", data_schema=schema)
 
-    # 3.2 EDIT STRING - Select String
-    async def async_step_string_edit_select(self, user_input=None):
-        if user_input is not None:
-             self.selected_item_id = user_input["selected_string"]
-             # We need to load existing data to pre-fill
-             # But ConfigEntries data is stored in HA, not our DB
-             # We can find the entry by ID
-             entry = self.hass.config_entries.async_get_entry(self.selected_item_id)
-             if entry:
-                 self.temp_data = entry.data.copy()
-                 # We might jump directly to details if we assume Brand and Group don't change often?
-                 # Or we can allow full edit. Let's allow full edit starting from Brand/Group.
-                 # Pre-filling might be tricky if we want to change brand.
-                 return await self.async_step_string_edit_details()
-        
-        # List ONLY our integration's entries
-        entries = self.hass.config_entries.async_entries(DOMAIN)
-        # Filter only "String" entries (those that have string_name or similar distinctive data)
-        # Or better yet, we can filter by checking if they are NOT Sensor Groups?
-        # A simpler way: Sensor Groups have 'sensor_group_name', Strings have 'string_name'
-        string_options = {e.entry_id: e.title for e in entries if CONF_STRING_NAME in e.data}
-        
-        if not string_options:
-             return self.async_abort(reason="no_strings_available")
-
-        schema = vol.Schema({
-            vol.Required("selected_string"): selector.SelectSelector(
-                selector.SelectSelectorConfig(options=list(string_options.values()), custom_value=False, mode="dropdown")
-                # Note: keys are IDs, but selector returns value? No, with options list it returns value if not set specific
-                # Let's use Label/Value dict if possible or just list of IDs map to names?
-                # Selector with simple list options returns the string selected.
-            )
-        })
-        # Wait, SelectSelector with simple list returns the string. We need ID.
-        # We need a map. {id: name}. SelectSelector options is list of strings or dicts {value: ..., label: ...}
-        options_list = [{"value": k, "label": v} for k, v in string_options.items()]
-
-        schema = vol.Schema({
-            vol.Required("selected_string"): selector.SelectSelector(
-                selector.SelectSelectorConfig(options=options_list, mode="dropdown")
-            )
-        })
-        return self.async_show_form(step_id="string_edit_select", data_schema=schema)
-
-    async def async_step_string_edit_details(self, user_input=None):
-         # This needs to be similar to create but updating.
-         # For simplicity in V1 for edit:
-         # We just show the details form directly assuming user wants to tweak geometry/model.
-         # If they want to change Brand/Group they might strictly need to recreate or we add 'step 1 edit'
-         # Let's simple Edit Details only for now.
-         
-         if user_input is not None:
-             # Update Entry
-             entry = self.hass.config_entries.async_get_entry(self.selected_item_id)
-             if entry:
-                 new_data = {**entry.data, **user_input}
-                 self.hass.config_entries.async_update_entry(entry, data=new_data)
-                 return self.async_create_entry(title=f"Updated: {entry.title}", data={})
-         
-         # Load defaults
-         default_data = self.temp_data
-         
-         # Note: We need the list of models for the *current* brand saved in data
-         brand = default_data.get(CONF_BRAND, "Generic")
-         models_filtered = self._db.list_models_by_brand(brand)
-         
-         schema = vol.Schema({
-            vol.Required(CONF_PANEL_MODEL, default=default_data.get(CONF_PANEL_MODEL)): selector.SelectSelector(
-                selector.SelectSelectorConfig(options=list(models_filtered.values()), mode="dropdown")
-            ),
-            vol.Required(CONF_NUM_PANELS, default=default_data.get(CONF_NUM_PANELS, 1)): vol.All(int, vol.Range(min=1)),
-            vol.Required(CONF_NUM_STRINGS, default=default_data.get(CONF_NUM_STRINGS, 1)): vol.All(int, vol.Range(min=1)),
-            vol.Required(CONF_TILT, default=default_data.get(CONF_TILT, 30)): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
-            vol.Required(CONF_AZIMUTH, default=default_data.get(CONF_AZIMUTH, 180)): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
-            vol.Optional(CONF_REAL_PRODUCTION_SENSOR, default=default_data.get(CONF_REAL_PRODUCTION_SENSOR)): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain="sensor", device_class="power")
-            ),
-        })
-         return self.async_show_form(step_id="string_edit_details", data_schema=schema)
+    # Edit String functions removed. Use Reconfigure flow.
 
     # =================================================================================
     # RECONFIGURE FLOW (Native "Configure" button support)

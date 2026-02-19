@@ -382,6 +382,9 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_NUM_STRINGS, default=1): vol.All(int, vol.Range(min=1)),
             vol.Required(CONF_TILT, default=30): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
             vol.Required(CONF_AZIMUTH, default=180): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+            vol.Optional(CONF_REAL_PRODUCTION_SENSOR): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="sensor", device_class="power")
+            ),
         })
         return self.async_show_form(step_id="string_create_details", data_schema=schema)
 
@@ -459,6 +462,9 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_NUM_STRINGS, default=default_data.get(CONF_NUM_STRINGS, 1)): vol.All(int, vol.Range(min=1)),
             vol.Required(CONF_TILT, default=default_data.get(CONF_TILT, 30)): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
             vol.Required(CONF_AZIMUTH, default=default_data.get(CONF_AZIMUTH, 180)): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+            vol.Optional(CONF_REAL_PRODUCTION_SENSOR, default=default_data.get(CONF_REAL_PRODUCTION_SENSOR)): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="sensor", device_class="power")
+            ),
         })
          return self.async_show_form(step_id="string_edit_details", data_schema=schema)
 
@@ -553,6 +559,9 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_NUM_STRINGS, default=default_data.get(CONF_NUM_STRINGS, 1)): vol.All(int, vol.Range(min=1)),
             vol.Required(CONF_TILT, default=default_data.get(CONF_TILT, 30)): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
             vol.Required(CONF_AZIMUTH, default=default_data.get(CONF_AZIMUTH, 180)): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+            vol.Optional(CONF_REAL_PRODUCTION_SENSOR, default=default_data.get(CONF_REAL_PRODUCTION_SENSOR)): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="sensor", device_class="power")
+            ),
         })
         
         return self.async_show_form(step_id="reconfigure_string", data_schema=schema)

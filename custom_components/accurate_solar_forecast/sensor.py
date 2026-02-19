@@ -92,12 +92,31 @@ class SolarStringSensor(SensorEntity):
         # Link to the Sensor Group Device? Or create its own device?
         # Strings are virtual, maybe its own device or no device (just entity).
         # Let's give it a device so it looks nice in UI.
+        # Linking Logic
+        # Linking Logic
+        real_sensor_id = self._config.get(CONF_REAL_PRODUCTION_SENSOR)
+        device_iden = None
+        device_name = None
+        
+        if real_sensor_id:
+             ent_reg = er.async_get(hass)
+             entity_entry = ent_reg.async_get(real_sensor_id)
+             if entity_entry and entity_entry.device_id:
+                 dev_reg = dr.async_get(hass)
+                 device = dev_reg.async_get(entity_entry.device_id)
+                 if device:
+                     device_identifiers = device.identifiers
+
+        if not device_iden:
+            # Fallback: Create independent device
+            device_iden = {(DOMAIN, self._attr_unique_id)} 
+
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            name=self._attr_name,
-            manufacturer=self._panel_data.get("brand", "Generic") if self._panel_data else "Generic",
-            model=model_name,
-            via_device=(DOMAIN, sensor_group_data.get(CONF_SENSOR_GROUP_NAME)) # Logically linked
+            identifiers=device_iden,
+            name=self._attr_name if not real_sensor_id else None, # If linked, use inverter name (handled by HA merging)
+            manufacturer=self._panel_data.get("brand", "Generic") if not real_sensor_id else None,
+            model=model_name if not real_sensor_id else None,
+            via_device=(DOMAIN, sensor_group_data.get(CONF_SENSOR_GROUP_NAME)) if not real_sensor_id else None
         )
 
     @property

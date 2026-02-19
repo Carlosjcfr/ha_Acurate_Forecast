@@ -138,7 +138,8 @@
                     "num_panels": "Series Panels",
                     "num_strings": "Parallel Strings",
                     "tilt": "Panel Tilt (°)",
-                    "azimuth": "Panel Azimuth (180°=S)"
+                    "azimuth": "Panel Azimuth (180°=S)",
+                    "real_production_sensor": "Real Production Sensor (W)"
                 }
             },
             "string_edit_select": {
@@ -156,7 +157,8 @@
                     "num_panels": "Series Panels",
                     "num_strings": "Parallel Strings",
                     "tilt": "Panel Tilt (°)",
-                    "azimuth": "Panel Azimuth (180°=S)"
+                    "azimuth": "Panel Azimuth (180°=S)",
+                    "real_production_sensor": "Real Production Sensor (W)"
                 }
             },
             "reconfigure_sensor_group": {
@@ -181,7 +183,8 @@
                     "num_panels": "Series Panels",
                     "num_strings": "Parallel Strings",
                     "tilt": "Panel Tilt (°)",
-                    "azimuth": "Panel Azimuth (180°=S)"
+                    "azimuth": "Panel Azimuth (180°=S)",
+                    "real_production_sensor": "Real Production Sensor (W)"
                 }
             }
         },

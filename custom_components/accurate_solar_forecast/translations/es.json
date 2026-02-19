@@ -34,6 +34,38 @@
                     "sensor_group_edit_select": "Editar grupo"
                 }
             },
+            "pv_model_select_manufacturer": {
+                "title": "Selecciona fabricante",
+                "description": "Elige fabricante y configuración de cubierta.",
+                "data": {
+                    "brand": "Fabricante del Modulo Fotovoltaico *",
+                    "roof": "Cubierta"
+                }
+            },
+            "pv_model_configure_roof": {
+                "title": "Configurar cubierta",
+                "description": "Define los parámetros de orientación.",
+                "data": {
+                    "name": "Nombre *",
+                    "tilt": "Inclinación",
+                    "orientation": "Orientación"
+                }
+            },
+            "pv_model_details": {
+                "title": "Nuevo Módulo FV",
+                "description": "Introduce las especificaciones técnicas.",
+                "data": {
+                    "name": "Modelo *",
+                    "brand": "Fabricante *",
+                    "p_stc": "Potencia (STC) *",
+                    "gamma": "Coeficiente de t° (%/°C) *",
+                    "noct": "NOCT (°C) *",
+                    "voc": "Voc *",
+                    "isc": "Isc *",
+                    "vmp": "Vmp *",
+                    "imp": "Imp *"
+                }
+            },
             "pv_model_create": {
                 "title": "Nuevo Módulo FV",
                 "description": "Introduce las especificaciones técnicas.",

@@ -71,13 +71,67 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             menu_options=options
         )
 
-    # 1.1 CREATE PV MODEL
+    # 1.1 CREATE PV MODEL (Entry)
     async def async_step_pv_model_create(self, user_input=None):
-        """Crear un nuevo modelo."""
-        errors = {}
+        """Inicio del flujo de creación de modelo."""
+        return await self.async_step_pv_model_select_manufacturer()
+
+    # Step: Select Brand & Roof
+    async def async_step_pv_model_select_manufacturer(self, user_input=None):
         if user_input is not None:
-             # Guardar en DB
-            await self._db.add_model(
+             self.temp_data[CONF_BRAND] = user_input[CONF_BRAND]
+             roof_selection = user_input[CONF_ROOF_NAME]
+             
+             if roof_selection == CONF_NEW_ROOF_OPTION:
+                 return await self.async_step_pv_model_configure_roof()
+             else:
+                 self.temp_data[CONF_ROOF_ID] = roof_selection
+                 return await self.async_step_pv_model_details()
+
+        brands_list = self._db.list_brands()
+        roofs = self._db.list_roofs()
+        
+        # Add "Nueva Cubierta" option
+        roofs_options = [{"value": CONF_NEW_ROOFS_OPTION, "label": "Nueva Cubierta"}]
+        for cid, cname in roofs.items():
+             roof_options.append({"value": cid, "label": cname})
+
+        schema = vol.Schema({
+            vol.Required(CONF_BRAND, default="Generic"): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=brands_list, custom_value=True, mode="dropdown")
+            ),
+            vol.Required(CONF_ROOF_NAME, default=CONF_NEW_ROOF_OPTION): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=roof_options, mode="dropdown")
+            )
+        })
+        return self.async_show_form(step_id="pv_model_select_manufacturer", data_schema=schema)
+
+    # Step: Configure New Roof
+    async def async_step_pv_model_configure_roof(self, user_input=None):
+        if user_input is not None:
+             # Save Roof to DB
+             await self._db.add_roof(
+                 user_input["name"],
+                 user_input["tilt"],
+                 user_input["orientation"]
+             )
+             # Get the ID (name based)
+             roof_id = user_input["name"].lower().replace(" ", "_")
+             self.temp_data[CONF_roof_ID] = roof_id
+             return await self.async_step_pv_model_details()
+
+        schema = vol.Schema({
+             vol.Required("name", default="Generico"): str,
+             vol.Required("tilt", default=0): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
+             vol.Required("orientation", default=0): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+        })
+        return self.async_show_form(step_id="pv_model_configure_roof", data_schema=schema)
+
+    # Step: Module Details
+    async def async_step_pv_model_details(self, user_input=None):
+        if user_input is not None:
+             # Save Model
+             await self._db.add_model(
                 user_input["name"],
                 user_input[CONF_BRAND],
                 user_input["p_stc"],
@@ -86,12 +140,37 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_VOC],
                 user_input[CONF_ISC],
                 user_input[CONF_VMP],
-                user_input[CONF_IMP]
-            )
-            return await self.async_step_pv_model_success()
+                user_input[CONF_IMP],
+                roof_id=self.temp_data.get(CONF_ROOF_ID)
+             )
+             return await self.async_step_pv_model_success()
+        
+        brands_list = self._db.list_brands()
+        defaults = self.temp_data if self.temp_data else {}
+        
+        schema = vol.Schema({
+            vol.Required("name"): str,
+            vol.Required(CONF_BRAND, default=defaults.get(CONF_BRAND, "Generic")): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=brands_list, custom_value=True, mode="dropdown")
+            ),
+            vol.Required("p_stc", default=450): vol.All(vol.Coerce(float), vol.Range(min=0.1)),
+            vol.Required("gamma", default=-0.35): vol.Coerce(float),
+            vol.Required("noct", default=45): vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
+            vol.Required(CONF_VOC, default=50): vol.All(vol.Coerce(float), vol.Range(min=0.1)),
+            vol.Required(CONF_ISC, default=13): vol.All(vol.Coerce(float), vol.Range(min=0.1)),
+            vol.Required(CONF_VMP, default=41): vol.All(vol.Coerce(float), vol.Range(min=0.1)),
+            vol.Required(CONF_IMP, default=12): vol.All(vol.Coerce(float), vol.Range(min=0.1)),
+        })
+        return self.async_show_form(step_id="pv_model_details", data_schema=schema)
 
-        return self._show_pv_model_form("pv_model_create", errors)
-
+    # Helper: Model Form (Kept/Modified for Edit flow if needed, OR we reuse pv_model_details?)
+    # The Edit flow calls _show_pv_model_form. 
+    # The Edit flow might NOT need the Roof selection if we are just editing params.
+    # However, if we want to change the Roof, we might need it. 
+    # For now, I will KEEP _show_pv_model_form but update it to include optional Roof?
+    # Or better yet, redirect Edit flow to use pv_model_details schema?
+    # Let's simple update _show_pv_model_form to match the new fields if any.
+    
     # 1.2 EDIT PV MODEL (Select -> Form)
     async def async_step_pv_model_edit_select(self, user_input=None):
         if user_input is not None:
@@ -102,15 +181,10 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pv_model_edit_form(self, user_input=None):
         if user_input is not None:
-            # Update (Overwriting add_model handles update if ID matches, but ID logic needs care.
-            # Here we assume user might change name, creating new ID? 
-            # Ideally we keep ID constant or allow full overwrite. 
-            # For simplicity: Delete old, Create new OR Update fields.
-            # DB add_model uses name as ID source. If name changes -> New Entry.
-            # Let's keep it simple: Add/Update based on name.
+            # Preserve existing roof_id if available (not editable here yet)
+            current_model = self._db.get_model(self.selected_item_id)
+            existing_roof_id = current_model.get("roof_id") if current_model else None
             
-            # If name changed, we should probably delete old one? 
-            # This is complex. Let's just update for now.
             await self._db.add_model(
                 user_input["name"],
                 user_input[CONF_BRAND],
@@ -120,15 +194,10 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_VOC],
                 user_input[CONF_ISC],
                 user_input[CONF_VMP],
-                user_input[CONF_IMP]
+                user_input[CONF_IMP],
+                roof_id=existing_roof_id
             )
             return await self.async_step_pv_model_success()
-
-        # Load Data
-        # We need to find the model data by name/id
-        # The selector returned the ID (name based key)
-        model_data = self._db.get_model(self.selected_item_id)
-        return self._show_pv_model_form("pv_model_edit_form", {}, default_data=model_data)
 
     # 1.3 SUCCESS & LOOP (Menu intermedio)
     async def async_step_pv_model_success(self, user_input=None):
@@ -141,7 +210,6 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_pv_model_finish(self, user_input=None):
         """Finalizar el flujo de modelos (sin crear entrada en HA, solo guardando DB)."""
         return self.async_abort(reason="pv_models_saved")
-
 
     # Helper: Model Form
     def _show_pv_model_form(self, step_id, errors, default_data=None):
@@ -160,6 +228,9 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_ISC, default=default_data.get("isc", vol.UNDEFINED)): vol.All(vol.Coerce(float), vol.Range(min=0.1)),
             vol.Required(CONF_VMP, default=default_data.get("vmp", vol.UNDEFINED)): vol.All(vol.Coerce(float), vol.Range(min=0.1)),
             vol.Required(CONF_IMP, default=default_data.get("imp", vol.UNDEFINED)): vol.All(vol.Coerce(float), vol.Range(min=0.1)),
+            # Should we add Roof selection here for Edit? 
+            # The mockup for Edit isn't explicitly detailed, but generally Edit should allow editing all properties.
+            # I'll leave it simple for now as requested: "actualiza y adapta... para coincidir con la siguiente moc" (which focuses on creation flow).
         })
         return self.async_show_form(step_id=step_id, data_schema=schema, errors=errors)
 

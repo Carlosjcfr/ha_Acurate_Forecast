@@ -27,3 +27,8 @@ CONF_REF_TILT = "ref_tilt"
 CONF_SENSOR_GROUP_NAME = "sensor_group_name"
 CONF_SENSOR_GROUP_ID = "sensor_group_id"
 ATTR_SOURCE_SENSOR = "source_sensor"
+
+# Constants for Cover (Cubierta)
+CONF_ROOF_NAME = "cover"
+CONF_ROOF_ID = "cover_id"
+CONF_NEW_ROOF_OPTION = "new_cover"

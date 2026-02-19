@@ -34,6 +34,38 @@
                     "sensor_group_edit_select": "Edit Group"
                 }
             },
+            "pv_model_select_manufacturer": {
+                "title": "Select Manufacturer",
+                "description": "Choose manufacturer and roof configuration.",
+                "data": {
+                    "brand": "PV Module Manufacturer *",
+                    "roof": "roof"
+                }
+            },
+            "pv_model_configure_roof": {
+                "title": "Configure Roof",
+                "description": "Define roof orientation parameters.",
+                "data": {
+                    "name": "Name *",
+                    "tilt": "Inclinación (Tilt °)",
+                    "orientation": "Orientación (Azimuth °)"
+                }
+            },
+            "pv_model_details": {
+                "title": "New PV Module",
+                "description": "Enter technical specifications.",
+                "data": {
+                    "name": "Model *",
+                    "brand": "Manufacturer *",
+                    "p_stc": "Power (STC) *",
+                    "gamma": "Temp Coeff (%/°C) *",
+                    "noct": "NOCT (°C) *",
+                    "voc": "Voc *",
+                    "isc": "Isc *",
+                    "vmp": "Vmp *",
+                    "imp": "Imp *"
+                }
+            },
             "pv_model_create": {
                 "title": "New PV Module",
                 "description": "Enter technical specifications.",

@@ -11,6 +11,7 @@ class PVDatabase:
         self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
         self.data = {}
         self.sensor_groups = {} # Separate dictionary for sensor groups
+        self.roof = {}     # Separate dictionary for roofs
 
     async def async_load(self):
         """Carga la DB del disco."""
@@ -31,6 +32,7 @@ class PVDatabase:
                 }
             }
             self.sensor_groups = {}
+            self.roof = {}
             await self.async_save()
         else:
             # Handle migration or structure check if needed
@@ -41,17 +43,20 @@ class PVDatabase:
                      self.data = data
             
             self.sensor_groups = data.get("sensor_groups", {})
+            self.roofs = data.get("roofs", {})
 
     async def async_save(self):
         """Guarda la DB al disco."""
         save_data = {
             "models": self.data,
-            "sensor_groups": self.sensor_groups
+             "models": self.data,
+            "sensor_groups": self.sensor_groups,
+            "roofs": self.roofs
         }
         await self._store.async_save(save_data)
 
     # --- PV MODEL METHODS ---
-    def add_model(self, name, brand, p_stc, gamma, noct, voc, isc, vmp, imp):
+    def add_model(self, name, brand, p_stc, gamma, noct, voc, isc, vmp, imp, roof_id=None):
         model_id = name.lower().replace(" ", "_")
         self.data[model_id] = {
             "name": name,
@@ -62,7 +67,8 @@ class PVDatabase:
             "voc": voc,
             "isc": isc,
             "vmp": vmp,
-            "imp": imp
+            "imp": imp,
+            "roof_id": roof_id
         }
         return self.async_save()
 
@@ -133,3 +139,28 @@ class PVDatabase:
             del self.sensor_groups[group_id]
             return self.async_save()
         return False
+
+    # --- ROOF METHODS ---
+    def add_roof(self, name, tilt, orientation):
+        roof_id = name.lower().replace(" ", "_")
+        self.roofs[roof_id] = {
+            "name": name,
+            "tilt": tilt,
+            "orientation": orientation
+        }
+        return self.async_save()
+
+    def get_roof(self, roof_id):
+        return self.roofs.get(roof_id)
+
+    def delete_roof(self, roof_id):
+        if roof_id in self.roofs:
+            del self.roofs[roof_id]
+            return self.async_save()
+        return False
+
+    def list_roofs(self):
+        """Devuelve dict {id: nombre} para selectores."""
+        if not self.roofs:
+             return {}
+        return {k: v["name"] for k, v in self.roofs.items()}

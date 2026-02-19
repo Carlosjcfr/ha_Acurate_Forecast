@@ -22,7 +22,7 @@
                 "title": "Acciones",
                 "description": "Configuración de arrays solares.",
                 "menu_options": {
-                    "string_create_select_brand": "Crear String",
+                    "string_create_select_relations": "Crear String",
                     "string_edit_select": "Editar String"
                 }
             },
@@ -121,13 +121,15 @@
                     "weather_entity": "Pronostico del tiempo"
                 }
             },
-            "string_create_select_brand": {
+            "string_create_select_relations": {
                 "title": "Nuevo String",
                 "description": "Paso 1: Selecciona Sensores y Panel.",
                 "data": {
                     "string_name": "Nombre del String",
                     "selected_sensor_group": "Grupo de Sensores",
-                    "brand": "Fabricante del Panel"
+                    "brand": "Fabricante del Panel",
+                    "real_production_sensor": "Sensor de Producción Real (W)",
+                    "roof_name": "Tejado (Seleccionar o Crear Nuevo)"
                 }
             },
             "string_create_details": {

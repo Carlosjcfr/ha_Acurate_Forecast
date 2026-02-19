@@ -240,7 +240,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input.get(CONF_WEATHER_ENTITY)
             )
             # Create HA Device
-            return self.async_create_entry(title=name, data=user_input)
+            return self.async_create_entry(title="Modulos y Sensores", data=user_input)
             
          return self._show_sensor_group_form("sensor_group_create", errors)
 
@@ -323,7 +323,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # BRANCH 3: STRINGS (Integraciones - Create & Edit Only)
     # =================================================================================
     async def async_step_menu_strings(self, user_input=None):
-        options = ["string_create_select_brand"]
+        options = ["string_create_select_relations"]
         
         # Check if there are any strings created
         entries = self.hass.config_entries.async_entries(DOMAIN)
@@ -338,7 +338,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     # 3.1 CREATE STRING - Step A: Select Brand & Group
-    async def async_step_string_create_select_brand(self, user_input=None):
+    async def async_step_string_create_select_relations(self, user_input=None):
          if user_input is not None:
             self.temp_data = user_input
             return await self.async_step_string_create_details()
@@ -358,14 +358,30 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             vol.Required(CONF_BRAND, default="Generic"): selector.SelectSelector(
                 selector.SelectSelectorConfig(options=brands_list, mode="dropdown")
-            )
+            ),
+            vol.Optional(CONF_REAL_PRODUCTION_SENSOR): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="sensor", device_class="power")
+            ),
+            vol.Optional(CONF_ROOF_NAME, default="Default Roof"): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=list(self._db.list_roofs().values()), 
+                    mode="dropdown",
+                    custom_value=True
+                )
+            ),
         })
-         return self.async_show_form(step_id="string_create_select_brand", data_schema=schema)
+         return self.async_show_form(step_id="string_create_select_relations", data_schema=schema)
 
     # 3.1 CREATE STRING - Step B: Details
     async def async_step_string_create_details(self, user_input=None):
         if user_input is not None:
              final_data = {**self.temp_data, **user_input}
+             
+             # Save Roof if new
+             roof_name = self.temp_data.get(CONF_ROOF_NAME)
+             if roof_name:
+                 await self._db.add_roof(roof_name)
+
              return self.async_create_entry(
                 title=self.temp_data[CONF_STRING_NAME], 
                 data=final_data
@@ -382,9 +398,6 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_NUM_STRINGS, default=1): vol.All(int, vol.Range(min=1)),
             vol.Required(CONF_TILT, default=30): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
             vol.Required(CONF_AZIMUTH, default=180): vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
-            vol.Optional(CONF_REAL_PRODUCTION_SENSOR): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain="sensor", device_class="power")
-            ),
         })
         return self.async_show_form(step_id="string_create_details", data_schema=schema)
 
@@ -519,7 +532,7 @@ class AccurateForecastFlow(config_entries.ConfigFlow, domain=DOMAIN):
              self.hass.config_entries.async_update_entry(
                  self.reconfigure_entry, 
                  data=user_input, 
-                 title=new_name
+                 title="Modulos y Sensores"
              )
              return self.async_update_reload_and_abort(self.reconfigure_entry)
              

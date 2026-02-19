@@ -22,7 +22,7 @@
                 "title": "Actions",
                 "description": "Solar Array Configuration.",
                 "menu_options": {
-                    "string_create_select_brand": "Create String",
+                    "string_create_select_relations": "Create String",
                     "string_edit_select": "Edit String"
                 }
             },
@@ -121,13 +121,15 @@
                     "weather_entity": "Weather forecast"
                 }
             },
-            "string_create_select_brand": {
+            "string_create_select_relations": {
                 "title": "New String",
                 "description": "Step 1: Select Sensors and Panel.",
                 "data": {
                     "string_name": "String Name",
                     "selected_sensor_group": "Sensor Group",
-                    "brand": "Panel Manufacturer"
+                    "brand": "Panel Manufacturer",
+                    "real_production_sensor": "Real Production Sensor (W)",
+                    "roof_name": "Roof (Select or Create New for this string)"
                 }
             },
             "string_create_details": {

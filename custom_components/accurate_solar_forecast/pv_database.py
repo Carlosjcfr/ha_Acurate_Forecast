@@ -11,6 +11,7 @@ class PVDatabase:
         self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
         self.data = {}
         self.sensor_groups = {} # Separate dictionary for sensor groups
+        self.roofs = {}         # Separate dictionary for roofs
 
     async def async_load(self):
         """Carga la DB del disco."""
@@ -31,6 +32,7 @@ class PVDatabase:
                 }
             }
             self.sensor_groups = {}
+            self.roofs = {}
             await self.async_save()
         else:
             # Handle migration or structure check if needed
@@ -41,14 +43,34 @@ class PVDatabase:
                      self.data = data
             
             self.sensor_groups = data.get("sensor_groups", {})
+            self.roofs = data.get("roofs", {})
 
     async def async_save(self):
         """Guarda la DB al disco."""
         save_data = {
             "models": self.data,
-            "sensor_groups": self.sensor_groups
+            "sensor_groups": self.sensor_groups,
+            "roofs": self.roofs
         }
         await self._store.async_save(save_data)
+
+    # --- ROOF METHODS ---
+    def add_roof(self, name):
+        """Adds a roof to the database."""
+        roof_id = name.lower().replace(" ", "_")
+        if roof_id not in self.roofs:
+            self.roofs[roof_id] = {
+                "name": name
+            }
+            return self.async_save()
+        return True # Already exists
+
+    def list_roofs(self):
+        """Returns a dict {id: name} of roofs."""
+        return {k: v["name"] for k, v in self.roofs.items()}
+    
+    def get_roof(self, roof_id):
+        return self.roofs.get(roof_id)
 
     # --- PV MODEL METHODS ---
     def add_model(self, name, brand, p_stc, gamma, noct, voc, isc, vmp, imp):

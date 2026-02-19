@@ -15,7 +15,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     db = hass.data[DOMAIN]["db"] # DB is assumed to be loaded in __init__
     
     # CASE 1: SENSOR GROUP (GROUP OF SENSORS)
-    # CASE 1: SENSOR GROUP (GROUP OF SENSORS)
     if CONF_SENSOR_GROUP_NAME in config_entry.data:
         # Create a Virtual Link Sensor
         # This sensor indicates status and holds attributes of all linked sensors
@@ -24,36 +23,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         ref_sensor_id = config_entry.data.get(CONF_REF_SENSOR)
         device_identifiers = None
         
-        if ref_sensor_id:
-            try:
-                ent_reg = er.async_get(hass)
-                dev_reg = dr.async_get(hass)
-                
-                ref_entry = ent_reg.async_get(ref_sensor_id)
-                if ref_entry and ref_entry.device_id:
-                    device = dev_reg.async_get(ref_entry.device_id)
-                    if device:
-                        device_identifiers = device.identifiers
-            except Exception as e:
-                _LOGGER.warning(f"Could not link to existing device: {e}")
-
+        # NOTE: User requested grouping ALL sensor groups into a single device
+        # So we override the previous logic of linking to the reference sensor's device
+        # and instead use a shared identifier for the integration's Sensor Groups container.
+        
         async_add_entities([
-            SensorGroupVirtualSensor(hass, config_entry, device_identifiers)
+            SensorGroupVirtualSensor(hass, config_entry),
+            # Also add PV Model Library Sensor here ensure it exists
+            PVLibrarySensor(hass, db)
         ])
 
     # CASE 2: SOLAR STRING (POWER PREDICTION)
     elif CONF_STRING_NAME in config_entry.data:
         # We need to look up the Sensor Group data!
         # The string entry has 'selected_sensor_group' (which is the name/ID in DB)
-        # However, to be robust, we should probably look up the CONFIG ENTRY of the sensor group?
-        # OR just use the DB since the sensors are entities in HA anyway.
-        # Let's use the DB to get the entity IDs associated with that group name.
         
         group_name = config_entry.data.get("selected_sensor_group")
-        # In this implementation, the value stored was the Name (key in DB dict was name-based id)
-        # But wait, config_flow list_sensor_groups returned {id: name}. SelectSelector returns the KEY (id).
-        # So group_name is actually the group_id.
-        
         sensor_group_data = db.get_sensor_group(group_name)
         
         if sensor_group_data:
@@ -62,7 +47,37 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _LOGGER.error(f"Sensor group '{group_name}' not found in DB for string {config_entry.title}")
 
 
+class PVLibrarySensor(SensorEntity):
+    """Sensor that exposes the library of PV Models as attributes."""
+    
+    def __init__(self, hass, db):
+        self.hass = hass
+        self._db = db
+        self._attr_name = "PV Models Library"
+        self._attr_unique_id = "acc_solar_pv_models_library"
+        self._attr_icon = "mdi:solar-panel"
+        
+        # Grouping Requirement: "Modulos fotovoltaicos: con una entidad anidada"
+        # We create a specific device for this
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, "pv_modules_library")},
+            name="Modulos Fotovoltaicos",
+            manufacturer="Accurate Solar Forecast",
+            model="PV Database",
+            entry_type=dr.DeviceEntryType.SERVICE
+        )
 
+    @property
+    def native_value(self):
+        return f"{len(self._db.list_models())} Models"
+        
+    @property
+    def extra_state_attributes(self):
+        """Return the dictionary of models."""
+        return {
+            "models": self._db.list_models(),
+            "brands": self._db.list_brands()
+        }
 
 
 class SolarStringSensor(SensorEntity):
@@ -89,15 +104,37 @@ class SolarStringSensor(SensorEntity):
         self._attr_native_value = 0
         self._attr_extra_state_attributes = {}
 
-        # Link to the Sensor Group Device? Or create its own device?
-        # Strings are virtual, maybe its own device or no device (just entity).
-        # Let's give it a device so it looks nice in UI.
+        # Linking Logic
+        target_device_id = self._config.get(CONF_INVERTER_DEVICE)
+        device_iden = None
+        via_device = None
+        device_name = None
+        
+        if target_device_id:
+             dev_reg = dr.async_get(hass)
+             device = dev_reg.async_get(target_device_id)
+             if device:
+                 # Associate with the existing Inverter Device
+                 # We copy its identifiers to "join" it.
+                 # WAITING: You cannot just set identifiers to match another device to 'add' an entity to it 
+                 # if that device belongs to another integration. 
+                 # However, HA allows multiple integrations to add entities to the same device 
+                 # IF they know the identifiers.
+                 device_iden = device.identifiers
+                 # We don't change name/manufacturer if valid, we let HA merge.
+                 # But we must provide enough info.
+                 
+        if not device_iden:
+            # Fallback: "Strings sin agrupar"
+            device_iden = {(DOMAIN, "strings_unassigned")}
+            device_name = "Strings sin agrupar"
+
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            name=self._attr_name,
-            manufacturer=self._panel_data.get("brand", "Generic") if self._panel_data else "Generic",
-            model=model_name,
-            via_device=(DOMAIN, sensor_group_data.get(CONF_SENSOR_GROUP_NAME)) # Logically linked
+            identifiers=device_iden,
+            name=device_name if device_name else None,
+            manufacturer="Accurate Solar Forecast" if not target_device_id else None,
+            # If we are linking to an inverter, we don't set model/manufacturer to avoid overwriting invalidly
+            via_device=(DOMAIN, "sensor_groups_global") # Link topology
         )
 
     @property
@@ -235,7 +272,7 @@ class SolarStringSensor(SensorEntity):
 
         # 5. Modelo Térmico
         noct = self._panel_data.get("noct", 45)
-        t_cell = t_amb + (irr_target / 800) * (noct - 20)
+        t_cell = t_amb + (irr_target / 800.0) * (noct - 20) 
 
         # 6. Cálculo de Potencia DC
         p_stc = self._panel_data.get("p_stc", 400)
@@ -291,7 +328,7 @@ class SolarStringSensor(SensorEntity):
 class SensorGroupVirtualSensor(SensorEntity):
     """A virtual sensor that represents the health and data of a Sensor Group."""
     
-    def __init__(self, hass, config_entry, target_device_identifiers=None):
+    def __init__(self, hass, config_entry):
         self.hass = hass
         self._config = config_entry.data
         self._name = self._config.get(CONF_SENSOR_GROUP_NAME)
@@ -304,21 +341,15 @@ class SensorGroupVirtualSensor(SensorEntity):
         self._attr_icon = "mdi:link-variant"
         self._attr_should_poll = False
         
-        # Determine Device Info
-        if target_device_identifiers:
-            # Link to existing device (e.g., Weather Station)
-            self._attr_device_info = DeviceInfo(
-                identifiers=target_device_identifiers
-            )
-        else:
-            # Fallback: Create own device
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, config_entry.entry_id)},
-                name=self._name,
-                manufacturer="Accurate Solar Forecast",
-                model="Sensor Group",
-                entry_type=dr.DeviceEntryType.SERVICE
-            )
+        # Grouping Requirement: "Sensores: donde veremos anidados cada grupo de sensores creados"
+        # We enforce a shared grouping device for the entire integration's sensor groups
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, "sensor_groups_global")},
+            name="Sensores",
+            manufacturer="Accurate Solar Forecast",
+            model="Sensor Groups Collection",
+            entry_type=dr.DeviceEntryType.SERVICE
+        )
 
     async def async_added_to_hass(self):
         """Subscribe to all linked sensors."""

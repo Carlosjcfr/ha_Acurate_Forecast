@@ -5,7 +5,7 @@ import logging
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["sensor", "number", "select"]
 
 async def async_setup_entry(hass: HomeAssistant, entry):
     # Cargar la DB y ponerla disponible globalmente
@@ -53,7 +53,4 @@ async def async_remove_entry(hass: HomeAssistant, entry) -> None:
                await result
                
         # Case B: String (Does it have a DB entry? No, strings are just ConfigEntries)
-        # Strings use data from DB (models and sensor groups) but are not stored in DB themselves
-        # EXCEPT if we decide to track them there. Current architecture suggests Strings are purely ConfigEntries.
-        # But wait, PVDatabase DOES have 'models'. 
         return

@@ -57,9 +57,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensor_group_data = db.get_sensor_group(group_name)
         
         if sensor_group_data:
-            async_add_entities([SolarStringSensor(hass, config_entry.data, db, sensor_group_data)], update_before_add=True)
+            async_add_entities([
+                SolarStringSensor(hass, config_entry.data, db, sensor_group_data),
+                SolarStringPerformanceSensor(hass, config_entry.data, db, sensor_group_data)
+            ], update_before_add=True)
         else:
             _LOGGER.error(f"Sensor group '{group_name}' not found in DB for string {config_entry.title}")
+
+    # CASE 3: PV DATABASE MONITOR (Global)
+    # We can perform a check if this entry is the "main" one? 
+    # Actually, we don't have a "main" entry. 
+    # We can attach this sensor to any sensor group entry or create it once.
+    # Let's attach it to Sensor Groups for now as they are "system" level.
+    if CONF_SENSOR_GROUP_NAME in config_entry.data and "db" in hass.data[DOMAIN]:
+         async_add_entities([PVDatabaseSensor(hass, hass.data[DOMAIN]["db"])])
 
 
 
@@ -414,4 +425,147 @@ class SensorGroupVirtualSensor(SensorEntity):
             
         self._attr_native_value = status
         self._attr_extra_state_attributes = attributes
+        self.async_write_ha_state()
+
+class SolarStringPerformanceSensor(SensorEntity):
+    """Sensor for Solar String Performance (Efficiency)."""
+    
+    _attr_native_unit_of_measurement = "%"
+    _attr_device_class = None
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:chart-line"
+
+    def __init__(self, hass, config_entry_data, db, sensor_group_data):
+        self.hass = hass
+        self._config = config_entry_data
+        self._string_name = self._config.get(CONF_STRING_NAME)
+        self._attr_name = f"{self._string_name} Rendimiento"
+        self._attr_unique_id = f"str_{self._string_name.lower().replace(' ', '_')}_performance"
+        
+        # Link to same device
+        string_id = f"str_{self._string_name.lower().replace(' ', '_')}"
+        # We rely on the main sensor to create/link the device first usually, 
+        # but here we just target the same identifiers. 
+        # Linking to real device happens in main sensor, so we just target the *result* identifier?
+        # No, if main sensor links to real device, its identifiers CHANGE to the real device's identifiers.
+        # So we must replicate the linking logic here to find the correct identifiers!
+        
+        real_sensor_id = self._config.get(CONF_REAL_PRODUCTION_SENSOR)
+        device_iden = None
+        
+        if real_sensor_id:
+             ent_reg = er.async_get(hass)
+             entity_entry = ent_reg.async_get(real_sensor_id)
+             if entity_entry and entity_entry.device_id:
+                 dev_reg = dr.async_get(hass)
+                 device = dev_reg.async_get(entity_entry.device_id)
+                 if device:
+                     device_identifiers = device.identifiers
+                     # We use the REAL device identifiers
+                     device_iden = device_identifiers
+
+        if not device_iden:
+            device_iden = {(DOMAIN, string_id)} 
+            
+        self._attr_device_info = DeviceInfo(
+            identifiers=device_iden
+        )
+        
+        self.real_sensor_id = self._config.get(CONF_REAL_PRODUCTION_SENSOR)
+        # We need the Forecast entity ID too? Or just calculate it from sibling?
+        # We can't easily get the sibling's state directly inside here without knowing its ID.
+        # Sibling ID is deterministic: f"sensor.{string_name_slug}" usually?
+        # Let's assume we can get it via unique_id lookup? 
+        # Actually easier to re-calculate forecast? No, expensive.
+        # We will try to find the forecast sensor state.
+        self.forecast_entity_id = None # Resolved later
+
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
+        # We need to track Real Sensor AND Forecast Sensor (self)
+        # But we don't know our sibling's entity_id easily until it's registered.
+        # We can use the unique_id to find it in registry?
+        
+        # Track real sensor
+        if self.real_sensor_id:
+            self.async_on_remove(
+                async_track_state_change_event(self.hass, [self.real_sensor_id], self._update_state)
+            )
+            
+        # We also want to update when *forecast* updates.
+        # The forecast sensor updates on sun/weather change.
+        # We can listen to the same triggers? 
+        # Or just poll?
+        # Let's try to update whenever Real Sensor updates for now.
+        
+    @callback
+    def _update_state(self, event=None):
+        if not self.real_sensor_id:
+             return
+             
+        real_state = self.hass.states.get(self.real_sensor_id)
+        if not real_state or real_state.state in ["unavailable", "unknown"]:
+            self._attr_native_value = 0
+            self.async_write_ha_state()
+            return
+            
+        try:
+            real_w = float(real_state.state)
+        except:
+            real_w = 0
+            
+        # Get Forecast
+        # We predict the entity_id of our sibling
+        # Default naming: sensor.string_name
+        # Use simple slugify approach or look up by unique_id
+        sibling_uid = f"str_{self._string_name.lower().replace(' ', '_')}"
+        
+        ent_reg = er.async_get(self.hass)
+        sibling_entry = ent_reg.async_get_entity_id("sensor", DOMAIN, sibling_uid)
+        
+        forecast_w = 1 # Avoid div by zero
+        if sibling_entry:
+            s_state = self.hass.states.get(sibling_entry)
+            if s_state and s_state.state not in ["unavailable", "unknown"]:
+                try:
+                    forecast_w = float(s_state.state)
+                except: pass
+        
+        if forecast_w < 1: forecast_w = 1
+        
+        # Efficiency = (Real / Forecast) * 100
+        # If Real > Forecast, > 100% (Good performance or under-forecast)
+        eff = (real_w / forecast_w) * 100
+        self._attr_native_value = round(eff, 1)
+        self.async_write_ha_state()
+
+
+class PVDatabaseSensor(SensorEntity):
+    """Sensor to show PV Database status."""
+    
+    _attr_name = "Módulos Fotovoltaicos"
+    _attr_unique_id = "pv_database_status"
+    _attr_icon = "mdi:solar-panel"
+    _attr_native_unit_of_measurement = "modelos"
+
+    def __init__(self, hass, db):
+        self.hass = hass
+        self._db = db
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, "pv_database_global")},
+            name="Módulos Fotovoltaicos",
+            manufacturer="Accurate Solar Forecast",
+            model="Database"
+        )
+        self._update_state()
+
+    def _update_state(self):
+        models = self._db.list_models()
+        self._attr_native_value = len(models)
+        self._attr_extra_state_attributes = {
+            "model_list": list(models.keys())
+        }
+    
+    async def async_added_to_hass(self):
+        self._update_state()
         self.async_write_ha_state()
